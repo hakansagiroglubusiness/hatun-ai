@@ -2,7 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { generations } from "@/db/schema";
-import { ApiError, requireApiUser, storeBytes } from "@/lib/hatun-db";
+import { ApiError, refundCredits, requireApiUser, storeBytes } from "@/lib/hatun-db";
 import { downloadVideo, retrieveVideo } from "@/lib/openai";
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
@@ -19,7 +19,13 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
       const video = await retrieveVideo(item.providerJobId);
       const status = String(video.status || item.status);
       const update: Partial<typeof generations.$inferInsert> = { status, updatedAt: new Date() };
-      if (status === "failed") update.errorMessage = video.error?.message || "Video üretimi başarısız.";
+      if (status === "failed") {
+        update.errorMessage = video.error?.message || "Video üretimi başarısız.";
+        if (item.creditsCharged > 0) {
+          await refundCredits(user.id, item.id, item.creditsCharged);
+          update.creditsCharged = 0;
+        }
+      }
       if (status === "completed") {
         const bytes = await downloadVideo(item.providerJobId);
         const assetKey = `users/${user.id}/generations/${id}.mp4`;
