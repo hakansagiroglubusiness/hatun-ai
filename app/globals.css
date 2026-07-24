@@ -368,3 +368,27 @@ body{background-image:radial-gradient(circle at 76% -8%,rgba(217,255,79,.07),tra
   .prompt-code-wrap .prompt-copy-icon{right:12px;top:12px;width:40px;height:40px}
   .prompt-code-wrap pre{padding:64px 14px 16px}
 }
+
+/* shadcn-inspired control system */
+button,select,input,textarea,a{transition:color .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:none;box-shadow:0 0 0 2px #0b0c0c,0 0 0 4px rgba(217,255,79,.72)
+}
+button svg,a svg{flex:none;pointer-events:none}
+.icon-button{display:inline-grid;place-items:center;padding:0}
+.side-nav button{font-weight:500}
+.side-nav button svg{color:#737770}.side-nav button:hover svg,.side-nav button.active svg{color:#d9ff4f}
+.create-btn,.enhance,.estimate button,.text-icon-button,.prompt-modal-actions button,.all-tools b{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px
+}
+.quick-grid>button>svg{color:#72766f}.quick-grid>button:hover>svg{color:#d9ff4f}
+.studio-tabs .icon-button{width:42px}
+.text-icon-button{padding:7px 10px!important;border:1px solid #303230!important;border-radius:7px;background:#171818!important;color:#b6bab3!important}
+.text-icon-button:hover{background:#202220!important;color:#f3f5ef!important}
+.modal-close{display:grid;place-items:center;padding:0}
+.prompt-copy-icon{display:grid;place-items:center}
+.prompt-modal-actions button{font-weight:650}
+.gallery-actions a,.gallery-actions button{min-width:36px;min-height:36px}
+@media(pointer:coarse){
+  .gallery-actions a,.gallery-actions button,.prompt-copy-icon,.modal-close,.icon-button{min-width:44px;min-height:44px}
+}
