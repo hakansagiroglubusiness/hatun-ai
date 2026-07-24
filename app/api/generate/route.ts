@@ -12,7 +12,7 @@ import {
   TOOL_COSTS,
   type ToolId,
 } from "@/lib/hatun-db";
-import { createVideo, describeImage, editImage, generateImage } from "@/lib/openai";
+import { createVideo, describeImage, editImage, generateImage, IMAGE_MODEL } from "@/lib/openai";
 
 const VALID_TOOLS = new Set(Object.keys(TOOL_COSTS));
 
@@ -47,8 +47,12 @@ export async function POST(request: Request) {
       if (!object) throw new ApiError(404, "Referans dosyası depolamada bulunamadı.");
       referenceFiles.push(new File([await object.arrayBuffer()], upload.filename, { type: upload.contentType }));
     }
+    const imageReferenceFiles = referenceFiles.filter(file => file.type.startsWith("image/"));
     if (["motion", "clone", "tryon", "swap", "upscale"].includes(tool) && !referenceFiles.length) {
       throw new ApiError(400, "Bu araç için en az bir referans dosyası gerekli.");
+    }
+    if (["image", "clone", "tryon", "swap", "upscale"].includes(tool) && referenceFiles.length && !imageReferenceFiles.length) {
+      throw new ApiError(400, "Bu araç için en az bir görsel referans dosyası gerekli.");
     }
 
     const db = getDb();
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
     const now = new Date();
     const kind = tool === "video" || tool === "motion" ? "video" : tool === "clone" ? "prompt" : "image";
     const provider = "openai";
-    const model = tool === "video" || tool === "motion" ? "sora-2" : tool === "clone" ? "gpt-5.1" : "gpt-image-1";
+    const model = tool === "video" || tool === "motion" ? "sora-2" : tool === "clone" ? "gpt-5.1" : IMAGE_MODEL;
 
     await db.insert(generations).values({
       id,
@@ -99,14 +103,25 @@ export async function POST(request: Request) {
     if (["image", "tryon", "swap", "upscale"].includes(tool)) {
       let result: { bytes: Uint8Array; contentType: string };
       if (tool === "image") {
-        result = await generateImage(prompt, String(body.ratio || "9:16"), String(body.quality || "2K"));
+        if (imageReferenceFiles.length) {
+          const referencePrompt = [
+            "Bu görselleri yeni üretim için referans olarak kullan.",
+            "İlk görsel ana özne, kimlik ve kompozisyon referansıdır.",
+            "Varsa sonraki görseller stil, kıyafet, ürün ve sahne ayrıntıları için ek referanslardır.",
+            "Kullanıcı açıkça değiştirmedikçe yüzü, kimliği, saçları, ten tonunu, vücut oranlarını ve ayırt edici ayrıntıları yüksek sadakatle koru.",
+            `Kullanıcının isteği: ${prompt}`,
+          ].join("\n");
+          result = await editImage(imageReferenceFiles, referencePrompt, String(body.ratio || "9:16"));
+        } else {
+          result = await generateImage(prompt, String(body.ratio || "9:16"), String(body.quality || "2K"));
+        }
       } else {
         const instructions: Record<string, string> = {
           tryon: "İlk görseldeki yetişkin kişiye diğer referanstaki kıyafeti doğal biçimde giydir. Kişinin kimliğini, yüzünü ve vücut oranlarını koru. Gerçekçi ışık, kumaş ve gölgeler kullan.",
           swap: "Açık rıza verilmiş yetişkin referanslar arasında yüz değişimini gerçekçi biçimde uygula. Yüz dışındaki kompozisyonu, pozu, ışığı ve arka planı koru.",
           upscale: "Görseli doğal ayrıntıları koruyarak yüksek çözünürlüklü hâle getir. Keskinliği ve dokuyu iyileştir; kimliği, kompozisyonu ve renkleri değiştirme.",
         };
-        result = await editImage(referenceFiles, prompt || instructions[tool], String(body.ratio || "9:16"));
+        result = await editImage(imageReferenceFiles, prompt || instructions[tool], String(body.ratio || "9:16"));
       }
       const assetKey = `users/${user.id}/generations/${id}.webp`;
       await storeBytes(assetKey, result.bytes, result.contentType);

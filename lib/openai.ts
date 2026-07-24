@@ -1,6 +1,7 @@
 import { ApiError } from "./hatun-db";
 
 const API_ROOT = "https://api.openai.com/v1";
+export const IMAGE_MODEL = "gpt-image-2";
 
 function key() {
   const value = process.env.OPENAI_API_KEY;
@@ -72,7 +73,7 @@ export async function generateImage(prompt: string, size: string, quality: strin
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-image-1",
+      model: IMAGE_MODEL,
       prompt,
       size: allowedSizes[size] || "1024x1024",
       quality: quality === "HD" ? "high" : quality === "1K" ? "medium" : "high",
@@ -123,7 +124,7 @@ export async function describeImage(file: File) {
 export async function editImage(files: File[], prompt: string, size: string) {
   await moderateText(prompt);
   const form = new FormData();
-  form.set("model", "gpt-image-1");
+  form.set("model", IMAGE_MODEL);
   form.set("prompt", prompt);
   form.set("size", size === "16:9" ? "1536x1024" : size === "1:1" ? "1024x1024" : "1024x1536");
   form.set("quality", "high");
