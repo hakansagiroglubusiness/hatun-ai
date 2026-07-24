@@ -28,6 +28,15 @@ type GenerateResponse = {
   generation: Creation;
   clonedPrompt?: string;
 };
+type LibraryPrompt = {
+  id: string;
+  title: string;
+  category: string;
+  format: string;
+  prompt: string;
+  previewUrl: string;
+  sourceUrl: string;
+};
 
 const tools = [
   { id: "image", title: "Görsel üret", text: "Metin ve referanslardan yüksek kaliteli görseller", icon: "✦", type: "Görsel" },
@@ -52,15 +61,6 @@ const models: Record<StudioTool, string[]> = {
 const costs: Record<StudioTool, number> = {
   image: 60, video: 350, motion: 350, clone: 5, tryon: 75, swap: 90, upscale: 40,
 };
-
-const promptCards = [
-  ["Gün batımı portresi", "Yumuşak altın saat ışığında, 35 mm lens hissi veren doğal ve samimi yetişkin portresi."],
-  ["Şehir gecesi", "Neon ışıklı modern şehir sokağında, spontan telefon fotoğrafı estetiğinde yetişkin içerik üreticisi."],
-  ["Minimal stüdyo", "Kırık beyaz fonda, yumuşak gölgeli ve temiz ürün kampanyası estetiğinde portre."],
-  ["Sahil yaşamı", "Sabah ışığında sahil yürüyüşü, doğal rüzgâr ve gerçek telefon kamerası dokusu."],
-  ["Lüks otel", "Sıcak iç mekân ışığında modern otel lobisi, rahat ve kendinden emin poz."],
-  ["Fitness UGC", "Aydınlık spor salonunda doğal, reklam gibi görünmeyen mobil UGC karesi."],
-];
 
 const plans = [
   { id: "creator", name: "Creator", price: "$19.90", credits: "12.000", note: "Bireysel üreticiler", current: true },
@@ -97,6 +97,8 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadIds, setUploadIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [promptCards, setPromptCards] = useState<LibraryPrompt[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<LibraryPrompt | null>(null);
   const [galleryFilter, setGalleryFilter] = useState("Tümü");
   const [mobileNav, setMobileNav] = useState(false);
   const [ratio, setRatio] = useState("9:16");
@@ -133,8 +135,16 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [creations]);
 
-  const filteredPrompts = promptCards.filter(([title, text]) =>
-    `${title} ${text}`.toLocaleLowerCase("tr").includes(search.toLocaleLowerCase("tr")),
+  useEffect(() => {
+    if (view !== "prompts" || promptCards.length) return;
+    void fetch("/api/prompts")
+      .then(response => response.json())
+      .then((data: { prompts?: LibraryPrompt[] }) => setPromptCards(data.prompts || []))
+      .catch(() => setNotice("Prompt kütüphanesi yüklenemedi."));
+  }, [view, promptCards.length]);
+
+  const filteredPrompts = promptCards.filter(item =>
+    `${item.title} ${item.prompt} ${item.category} ${item.format}`.toLocaleLowerCase("tr").includes(search.toLocaleLowerCase("tr")),
   );
   const filteredCreations = useMemo(
     () => creations.filter(item => galleryFilter === "Tümü" || item.type === galleryFilter),
@@ -325,7 +335,9 @@ export default function Home() {
 
         {view === "tools" && <div className="page"><div className="page-intro"><span>ÜRETİM MERKEZİ</span><h2>Tek platform.<br />Tüm yaratıcı araçlar.</h2><p>Hatun&apos;un güvenli üretim araçlarıyla fikirden yayına kadar bütün süreci yönet.</p></div><div className="all-tools">{tools.map(item => <button key={item.id} onClick={() => openTool(item.id as StudioTool)}><span>{item.icon}</span><em>{item.type}</em><h3>{item.title}</h3><p>{item.text}</p><b>Aracı aç ↗</b></button>)}</div></div>}
 
-        {view === "prompts" && <div className="page"><div className="page-intro row"><div><span>İLHAM KÜTÜPHANESİ</span><h2>Hazır promptlar</h2><p>İçeriğine göre düzenle, tek tıkla stüdyoya taşı.</p></div><input className="library-search" placeholder="Promptlarda ara…" value={search} onChange={event => setSearch(event.target.value)} /></div><div className="prompt-grid">{filteredPrompts.map(([title, text], index) => <article key={title}><div className={`prompt-cover pc${index + 1}`}><span>HATUN / {String(index + 1).padStart(2, "0")}</span></div><h3>{title}</h3><p>{text}</p><button onClick={() => { setPrompt(text); openTool("image"); }}>Stüdyoda kullan ↗</button></article>)}</div></div>}
+        {view === "prompts" && <div className="page"><div className="page-intro row"><div><span>İLHAM KÜTÜPHANESİ</span><h2>Hazır promptlar</h2><p>{promptCards.length} lisanslı promptu ara, incele ve tek tıkla stüdyoya taşı.</p></div><input className="library-search" placeholder="Promptlarda ara…" value={search} onChange={event => setSearch(event.target.value)} /></div><div className="library-count">{filteredPrompts.length} prompt gösteriliyor</div><div className="prompt-grid">{filteredPrompts.map(item => <article key={item.id}><button className="prompt-preview" onClick={() => setSelectedPrompt(item)} aria-label={`${item.title} ayrıntılarını aç`}><img src={item.previewUrl} alt={item.title} loading="lazy" /><span>{item.format.toUpperCase()} · {item.id.replace("aiml-", "#")}</span></button><h3>{item.title}</h3><p>{item.prompt}</p><div className="prompt-actions"><button onClick={() => setSelectedPrompt(item)}>Tam prompt</button><button onClick={() => { setPrompt(item.prompt); openTool("image"); }}>Stüdyoda kullan ↗</button></div></article>)}</div></div>}
+
+        {selectedPrompt && <div className="prompt-modal" role="dialog" aria-modal="true" aria-label={selectedPrompt.title}><button className="modal-backdrop" aria-label="Kapat" onClick={() => setSelectedPrompt(null)} /><div className="prompt-modal-card"><button className="modal-close" onClick={() => setSelectedPrompt(null)} aria-label="Kapat">×</button><img src={selectedPrompt.previewUrl} alt={selectedPrompt.title} /><div className="prompt-modal-content"><span>{selectedPrompt.format.toUpperCase()} · {selectedPrompt.category}</span><h3>{selectedPrompt.title}</h3><pre>{selectedPrompt.prompt}</pre><div className="prompt-modal-actions"><button onClick={() => void navigator.clipboard.writeText(selectedPrompt.prompt)}>Promptu kopyala</button><button onClick={() => { setPrompt(selectedPrompt.prompt); setSelectedPrompt(null); openTool("image"); }}>Stüdyoda kullan ↗</button></div></div></div></div>}
 
         {view === "gallery" && <div className="page"><div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini filtrele, görüntüle ve indir.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(filter => <button className={galleryFilter === filter ? "active" : ""} key={filter} onClick={() => setGalleryFilter(filter)}>{filter}</button>)}</div></div><div className="gallery-grid">{filteredCreations.map((item, index) => <article key={item.id} className={`gallery-card ${["rose", "violet", "amber", "cyan"][index % 4]}`}>{item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} controls /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}<div><em>{item.type} · {statusLabel(item.status)}</em><h3>{item.title}</h3><small>{relativeTime(item.createdAt)}</small>{item.assetUrl && <a href={item.assetUrl} download>İndir ↗</a>}</div></article>)}</div></div>}
 
