@@ -4,7 +4,8 @@ import { getDb } from "@/db";
 import { uploads } from "@/db/schema";
 import { ApiError, requireApiUser } from "@/lib/hatun-db";
 
-const MAX_BYTES = 25 * 1024 * 1024;
+// Sites currently rejects larger request bodies before they reach this route.
+const MAX_BYTES = 900 * 1024;
 const ALLOWED_TYPES = new Set([
   "image/jpeg", "image/png", "image/webp",
   "video/mp4", "video/webm", "application/pdf",
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     const output = [];
     for (const file of files) {
       if (!ALLOWED_TYPES.has(file.type)) throw new ApiError(400, `${file.name} desteklenmeyen bir dosya türü.`);
-      if (file.size > MAX_BYTES) throw new ApiError(400, `${file.name} 25 MB sınırını aşıyor.`);
+      if (file.size > MAX_BYTES) throw new ApiError(413, `${file.name} 900 KB sınırını aşıyor.`);
       const id = crypto.randomUUID();
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const objectKey = `users/${user.id}/uploads/${id}-${safeName}`;

@@ -21,7 +21,7 @@ type AccountResponse = {
   generations: Creation[];
 };
 type PromptResponse = { error?: string; prompt: string };
-type UploadResponse = { error?: string; uploads: Array<{ id: string }> };
+type UploadResponse = { error?: string; uploads?: Array<{ id: string }> };
 type GenerateResponse = {
   error?: string;
   credits: number;
@@ -180,9 +180,18 @@ export default function Home() {
     form.set("purpose", tool);
     form.set("consentConfirmed", String(consentConfirmed));
     const response = await fetch("/api/uploads", { method: "POST", body: form });
-    const data = await response.json() as UploadResponse;
+    const raw = await response.text();
+    let data: UploadResponse = {};
+    try {
+      data = JSON.parse(raw) as UploadResponse;
+    } catch {
+      if (response.status === 413) {
+        throw new Error("Dosya yükleme sınırını aşıyor. Her dosya en fazla 900 KB olabilir.");
+      }
+    }
     if (!response.ok) throw new Error(data.error || "Dosyalar yüklenemedi.");
-    const ids = data.uploads.map((item: { id: string }) => item.id);
+    const ids = (data.uploads || []).map((item: { id: string }) => item.id);
+    if (!ids.length) throw new Error("Dosyalar yüklenemedi.");
     setUploadIds(ids);
     return ids;
   };
@@ -299,7 +308,7 @@ export default function Home() {
               <section className="config-panel">
                 <div className="field"><label>Araç</label><select value={tool} onChange={event => openTool(event.target.value as StudioTool)}>{tools.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></div>
                 <div className="field"><label>Model</label><select value={model} onChange={event => setModel(event.target.value)}>{models[tool].map(item => <option key={item}>{item}</option>)}</select></div>
-                <div className="field"><label>Referanslar <span>{selectedFiles.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/*,video/*,.pdf" onClick={event => { event.currentTarget.value = ""; }} onChange={event => { setSelectedFiles(Array.from(event.target.files || []).slice(0, 8)); setUploadIds([]); }} /><b>＋</b><span>{selectedFiles.length ? selectedFiles.map(file => file.name).join(", ") : tool === "motion" ? "Karakter görseli ve hareket videosu ekle" : "Referans dosyaları ekle"}</span></label></div>
+                <div className="field"><label>Referanslar <span>{selectedFiles.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/*,video/*,.pdf" onClick={event => { event.currentTarget.value = ""; }} onChange={event => { const files = Array.from(event.target.files || []).slice(0, 8); const oversized = files.find(file => file.size > 900 * 1024); if (oversized) { setSelectedFiles([]); setUploadIds([]); setNotice(`${oversized.name} yükleme sınırını aşıyor. Her dosya en fazla 900 KB olabilir.`); return; } setSelectedFiles(files); setUploadIds([]); setNotice(""); }} /><b>＋</b><span>{selectedFiles.length ? selectedFiles.map(file => file.name).join(", ") : tool === "motion" ? "Karakter görseli ve hareket videosu ekle" : "Referans dosyaları ekle"}</span></label></div>
                 {!["motion", "tryon", "swap", "upscale"].includes(tool) && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={tool === "clone" ? "Referans görselden çıkarılacak sahneyi açıklayabilirsin." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}>✦ {busy ? "İşleniyor…" : "Hatun AI ile geliştir"}</button></div>}
                 {["tryon", "swap"].includes(tool) && <label className="consent-check"><input type="checkbox" checked={consentConfirmed} onChange={event => setConsentConfirmed(event.target.checked)} /><span>Görüntüdeki herkesin 18 yaşından büyük olduğunu ve bu işlem için açık rızası bulunduğunu onaylıyorum.</span></label>}
                 <div className="inline-options"><label>Oran<select value={ratio} onChange={event => setRatio(event.target.value)}><option>9:16</option><option>1:1</option><option>16:9</option><option>3:4</option></select></label><label>Kalite<select value={quality} onChange={event => setQuality(event.target.value)}><option>2K</option><option>1K</option><option>HD</option></select></label>{tool === "video" && <label>Süre<select value={seconds} onChange={event => setSeconds(event.target.value)}><option value="4">4 sn</option><option value="8">8 sn</option><option value="12">12 sn</option></select></label>}</div>
