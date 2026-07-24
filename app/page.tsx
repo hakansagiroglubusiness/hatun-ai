@@ -4,12 +4,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight, Blocks, Check, Command, Copy, Download, Expand, HomeIcon,
-  ImageIcon, Images, Library, LoaderCircle, Menu, MoreHorizontal, Pencil, Play, Plus,
-  RefreshCw, ScanFace, Search, Shirt, Sparkles, Trash2, Upload, Video, WandSparkles, X,
+  ImageIcon, Images, Library, LoaderCircle, Menu, MoreHorizontal, Plus,
+  RefreshCw, Search, Sparkles, Trash2, Upload, WandSparkles, X,
 } from "lucide-react";
 
 type View = "home" | "studio" | "gallery" | "prompts" | "tools" | "pricing";
-type StudioTool = "image" | "video" | "motion" | "clone" | "tryon" | "swap" | "upscale";
+type StudioTool = "image" | "clone" | "upscale";
 type Creation = {
   id: string;
   type: "Görsel" | "Video";
@@ -48,26 +48,18 @@ type LibraryPrompt = {
 
 const tools = [
   { id: "image", title: "Görsel üret", text: "Metin ve referanslardan yüksek kaliteli görseller", icon: ImageIcon, type: "Görsel" },
-  { id: "video", title: "Video üret", text: "Metinden akıcı ve sinematik videolar", icon: Video, type: "Video" },
-  { id: "motion", title: "Motion Control", text: "Referans hareketi karakterine aktar", icon: Play, type: "Video" },
   { id: "clone", title: "Prompt klonla", text: "Bir görseli yeniden üretecek promptu çıkar", icon: Command, type: "Prompt" },
-  { id: "tryon", title: "Sanal giydirme", text: "Kıyafeti izinli yetişkin modele uygula", icon: Shirt, type: "Görsel" },
-  { id: "swap", title: "İzinli yüz değişimi", text: "Yalnızca açık rızalı yetişkin içeriklerinde", icon: ScanFace, type: "Görsel" },
   { id: "upscale", title: "Görsel iyileştir", text: "Keskinlik, detay ve çözünürlüğü yükselt", icon: Expand, type: "Görsel" },
 ] as const;
 
 const models: Record<StudioTool, string[]> = {
   image: ["GPT Image 2"],
-  video: ["Sora 2"],
-  motion: ["Hatun Motion"],
   clone: ["Hatun Vision"],
-  tryon: ["Hatun Try-On"],
-  swap: ["Hatun Consent Swap"],
   upscale: ["Hatun HD"],
 };
 
 const costs: Record<StudioTool, number> = {
-  image: 60, video: 350, motion: 350, clone: 5, tryon: 75, swap: 90, upscale: 40,
+  image: 60, clone: 5, upscale: 40,
 };
 
 const plans = [
@@ -107,13 +99,12 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [promptCards, setPromptCards] = useState<LibraryPrompt[]>([]);
   const [selectedPrompt, setSelectedPrompt] = useState<LibraryPrompt | null>(null);
+  const [selectedCreation, setSelectedCreation] = useState<Creation | null>(null);
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
   const [galleryFilter, setGalleryFilter] = useState("Tümü");
   const [mobileNav, setMobileNav] = useState(false);
   const [ratio, setRatio] = useState("9:16");
   const [quality, setQuality] = useState("2K");
-  const [seconds, setSeconds] = useState("8");
-  const [consentConfirmed, setConsentConfirmed] = useState(false);
 
   const loadAccount = async () => {
     try {
@@ -134,10 +125,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const hasPending = creations.some(item => ["queued", "in_progress", "processing"].includes(item.status));
+    const hasPending = creations.some(item => ["queued", "in_progress", "processing", "finalizing"].includes(item.status));
     if (!hasPending) return;
     const timer = window.setInterval(async () => {
-      const pending = creations.filter(item => ["queued", "in_progress", "processing"].includes(item.status));
+      const pending = creations.filter(item => ["queued", "in_progress", "processing", "finalizing"].includes(item.status));
       await Promise.all(pending.map(item => fetch(`/api/generations/${item.id}`, { cache: "no-store" })));
       await loadAccount();
     }, 7000);
@@ -147,8 +138,11 @@ export default function Home() {
   useEffect(() => {
     if (view !== "prompts" || promptCards.length) return;
     void fetch("/api/prompts")
-      .then(response => response.json())
-      .then((data: { prompts?: LibraryPrompt[] }) => setPromptCards(data.prompts || []))
+      .then(async response => {
+        if (!response.ok) throw new Error("Prompt kütüphanesi yüklenemedi.");
+        return response.json() as Promise<{ prompts?: LibraryPrompt[] }>;
+      })
+      .then(data => setPromptCards(data.prompts || []))
       .catch(() => setNotice("Prompt kütüphanesi yüklenemedi."));
   }, [view, promptCards.length]);
 
@@ -166,7 +160,6 @@ export default function Home() {
     setView("studio");
     setSelectedFiles([]);
     setUploadIds([]);
-    setConsentConfirmed(false);
     setNotice("");
     setMobileNav(false);
   };
@@ -204,7 +197,6 @@ export default function Home() {
     const form = new FormData();
     selectedFiles.forEach(file => form.append("files", file));
     form.set("purpose", tool);
-    form.set("consentConfirmed", String(consentConfirmed));
     const response = await fetch("/api/uploads", { method: "POST", body: form });
     const raw = await response.text();
     let data: UploadResponse = {};
@@ -224,12 +216,9 @@ export default function Home() {
 
   const generate = async () => {
     if (credits < costs[tool]) return setNotice("Bu işlem için yeterli kredin yok.");
-    if (["image", "video", "motion"].includes(tool) && !prompt.trim()) return setNotice("Üretim için bir prompt yaz.");
-    if (["motion", "tryon", "swap", "upscale", "clone"].includes(tool) && !selectedFiles.length && !uploadIds.length) {
+    if (tool === "image" && !prompt.trim()) return setNotice("Üretim için bir prompt yaz.");
+    if (["upscale", "clone"].includes(tool) && !selectedFiles.length && !uploadIds.length) {
       return setNotice("Bu araç için en az bir dosya ekle.");
-    }
-    if (["tryon", "swap"].includes(tool) && !consentConfirmed) {
-      return setNotice("Yetişkinlik ve açık rıza onayı zorunludur.");
     }
     setBusy(true);
     setNotice("Üretim hazırlanıyor…");
@@ -239,9 +228,8 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tool, model, prompt, ratio, quality, seconds,
+          tool, model, prompt, ratio, quality,
           uploadIds: ids,
-          consentConfirmed,
         }),
       });
       const data = await response.json() as GenerateResponse;
@@ -283,10 +271,15 @@ export default function Home() {
   };
 
   const editCreation = (item: Creation) => {
-    const nextTool: StudioTool = item.type === "Video" ? "video" : "image";
-    openTool(nextTool);
+    openTool("image");
     setPrompt(item.prompt || item.title);
     setNotice("Üretimin promptu düzenleme için stüdyoya taşındı.");
+  };
+
+  const recreateCreation = (item: Creation) => {
+    editCreation(item);
+    setNotice("Aynı prompt hazır. Yeni referans görselini ekleyip tekrar üretebilirsin.");
+    setSelectedCreation(null);
   };
 
   const deleteCreation = async (item: Creation) => {
@@ -296,6 +289,7 @@ export default function Home() {
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "Üretim silinemedi.");
       setCreations(previous => previous.filter(creation => creation.id !== item.id));
+      if (selectedCreation?.id === item.id) setSelectedCreation(null);
       setNotice("Üretim galeriden silindi.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Üretim silinemedi.");
@@ -318,7 +312,6 @@ export default function Home() {
         <nav className="side-nav compact">
           <button className={view === "tools" ? "active" : ""} onClick={() => { setView("tools"); setMobileNav(false); }}><Blocks size={17} /><span>Tüm araçlar</span></button>
           <button onClick={() => openTool("image")}><ImageIcon size={17} /><span>Görsel üret</span></button>
-          <button onClick={() => openTool("video")}><Video size={17} /><span>Video üret</span></button>
           <button onClick={() => openTool("clone")}><Command size={17} /><span>Prompt klonla</span></button>
         </nav>
         <div className="side-bottom">
@@ -346,7 +339,7 @@ export default function Home() {
             <section className="dashboard-grid">
               <div className="panel">
                 <div className="panel-title"><div><span>SON ÜRETİMLER</span><h3>Kaldığın yerden devam et</h3></div><button onClick={() => setView("gallery")}>Tümünü gör</button></div>
-                <CreationGrid creations={creations.slice(0, 4)} compact />
+                <CreationGrid creations={creations.slice(0, 4)} compact onOpen={item => { setView("gallery"); setSelectedCreation(item); }} onRecreate={recreateCreation} />
               </div>
               <aside className="usage-card"><span>AYLIK KULLANIM</span><h3>{credits.toLocaleString("tr-TR")}</h3><p>kalan kredi</p><div className="meter"><i style={{ width: `${Math.min(100, credits / 120)}%` }} /></div><small>Creator planı · 12.000 kredi</small><button onClick={() => setView("pricing")}>Paketi yükselt</button></aside>
             </section>
@@ -360,10 +353,9 @@ export default function Home() {
               <section className="config-panel">
                 <div className="field"><label>Araç</label><select value={tool} onChange={event => openTool(event.target.value as StudioTool)}>{tools.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></div>
                 <div className="field"><label>Model</label><select value={model} onChange={event => setModel(event.target.value)}>{models[tool].map(item => <option key={item}>{item}</option>)}</select></div>
-                <div className="field"><label>Referanslar <span>{selectedFiles.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/*,video/*,.pdf" onClick={event => { event.currentTarget.value = ""; }} onChange={event => { const files = Array.from(event.target.files || []).slice(0, 8); const oversized = files.find(file => file.size > 900 * 1024); if (oversized) { setSelectedFiles([]); setUploadIds([]); setNotice(`${oversized.name} yükleme sınırını aşıyor. Her dosya en fazla 900 KB olabilir.`); return; } setSelectedFiles(files); setUploadIds([]); setNotice(""); }} /><b><Upload size={17} /></b><span>{selectedFiles.length ? selectedFiles.map(file => file.name).join(", ") : tool === "motion" ? "Karakter görseli ve hareket videosu ekle" : "Referans dosyaları ekle"}</span></label>{tool === "image" && <small>İlk görsel ana karakter/kompozisyon, diğerleri stil, kıyafet veya sahne referansı olarak kullanılır.</small>}</div>
-                {!["motion", "tryon", "swap", "upscale"].includes(tool) && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={tool === "clone" ? "Referans görselden çıkarılacak sahneyi açıklayabilirsin." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}>{busy ? <><LoaderCircle className="spin" size={15} /> İşleniyor…</> : <><WandSparkles size={15} /> Hatun AI ile geliştir</>}</button></div>}
-                {["tryon", "swap"].includes(tool) && <label className="consent-check"><input type="checkbox" checked={consentConfirmed} onChange={event => setConsentConfirmed(event.target.checked)} /><span>Görüntüdeki herkesin 18 yaşından büyük olduğunu ve bu işlem için açık rızası bulunduğunu onaylıyorum.</span></label>}
-                <div className="inline-options"><label>Oran<select value={ratio} onChange={event => setRatio(event.target.value)}><option>9:16</option><option>1:1</option><option>16:9</option><option>3:4</option></select></label><label>Kalite<select value={quality} onChange={event => setQuality(event.target.value)}><option>2K</option><option>1K</option><option>HD</option></select></label>{tool === "video" && <label>Süre<select value={seconds} onChange={event => setSeconds(event.target.value)}><option value="4">4 sn</option><option value="8">8 sn</option><option value="12">12 sn</option></select></label>}</div>
+                <div className="field"><label>Referanslar <span>{selectedFiles.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/jpeg,image/png,image/webp" onClick={event => { event.currentTarget.value = ""; }} onChange={event => { const files = Array.from(event.target.files || []).slice(0, 8); const oversized = files.find(file => file.size > 900 * 1024); if (oversized) { setSelectedFiles([]); setUploadIds([]); setNotice(`${oversized.name} yükleme sınırını aşıyor. Her dosya en fazla 900 KB olabilir.`); return; } setSelectedFiles(files); setUploadIds([]); setNotice(""); }} /><b><Upload size={17} /></b><span>{selectedFiles.length ? selectedFiles.map(file => file.name).join(", ") : "Referans görselleri ekle"}</span></label>{tool === "image" && <small>İlk görsel ana karakter/kompozisyon, diğerleri stil, kıyafet veya sahne referansı olarak kullanılır.</small>}</div>
+                {tool !== "upscale" && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={tool === "clone" ? "Referans görselden çıkarılacak sahneyi açıklayabilirsin." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}>{busy ? <><LoaderCircle className="spin" size={15} /> İşleniyor…</> : <><WandSparkles size={15} /> Hatun AI ile geliştir</>}</button></div>}
+                <div className="inline-options"><label>Oran<select value={ratio} onChange={event => setRatio(event.target.value)}><option>9:16</option><option>1:1</option><option>16:9</option><option>3:4</option></select></label><label>Kalite<select value={quality} onChange={event => setQuality(event.target.value)}><option>2K</option><option>1K</option><option>HD</option></select></label></div>
                 <div className="estimate"><div><span>Tahmini maliyet</span><strong>{costs[tool]} kredi</strong></div><button onClick={generate} disabled={busy}>{busy ? <><LoaderCircle className="spin" size={17} /> İşleniyor…</> : <>{tool === "clone" ? "Promptu klonla" : "Üret"} <ArrowUpRight size={16} /></>}</button></div>
                 {notice && <div className={`notice ${busy ? "processing" : ""}`}>{notice}</div>}
               </section>
@@ -381,7 +373,9 @@ export default function Home() {
 
         {selectedPrompt && <div className="prompt-modal" role="dialog" aria-modal="true" aria-label={selectedPrompt.title}><button className="modal-backdrop" aria-label="Kapat" onClick={() => setSelectedPrompt(null)} /><div className="prompt-modal-card"><button className="modal-close" onClick={() => setSelectedPrompt(null)} aria-label="Kapat"><X size={17} /></button><img src={selectedPrompt.previewUrl} alt={selectedPrompt.title} /><div className="prompt-modal-content"><span>{selectedPrompt.format.toUpperCase()} · {selectedPrompt.category}</span><h3>{selectedPrompt.title}</h3><div className="prompt-code-wrap"><button className="prompt-copy-icon" title="Promptu kopyala" aria-label="Promptu kopyala" onClick={() => { void navigator.clipboard.writeText(selectedPrompt.prompt); setCopiedPromptId(selectedPrompt.id); window.setTimeout(() => setCopiedPromptId(null), 1600); }}>{copiedPromptId === selectedPrompt.id ? <Check size={17} /> : <Copy size={17} />}</button><pre>{selectedPrompt.prompt}</pre></div><div className="prompt-modal-actions"><button onClick={() => { setPrompt(selectedPrompt.prompt); setSelectedPrompt(null); openTool("image"); }}>Stüdyoda kullan <ArrowUpRight size={15} /></button></div></div></div></div>}
 
-        {view === "gallery" && <div className="page"><div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini filtrele, görüntüle ve indir.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(filter => <button className={galleryFilter === filter ? "active" : ""} key={filter} onClick={() => setGalleryFilter(filter)}>{filter}</button>)}</div></div><div className="gallery-grid">{filteredCreations.map((item, index) => <article key={item.id} className={`gallery-card ${["rose", "violet", "amber", "cyan"][index % 4]}`}>{item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} controls /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}<div><em>{item.type} · {statusLabel(item.status)}</em><h3>{item.title}</h3><small>{relativeTime(item.createdAt)}</small><div className="gallery-actions">{item.assetUrl && <a href={`${item.assetUrl}?download=1`} download aria-label="İndir" title="İndir"><Download size={16} /></a>}<button onClick={() => editCreation(item)} aria-label="Düzenle" title="Düzenle"><Pencil size={16} /></button><button className="delete" onClick={() => void deleteCreation(item)} aria-label="Sil" title="Sil"><Trash2 size={16} /></button></div></div></article>)}</div></div>}
+        {view === "gallery" && <div className="page"><div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini filtrele, görüntüle ve indir.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(filter => <button className={galleryFilter === filter ? "active" : ""} key={filter} onClick={() => setGalleryFilter(filter)}>{filter}</button>)}</div></div><div className="gallery-grid">{filteredCreations.map((item, index) => <article key={item.id} role="button" tabIndex={0} onClick={() => setSelectedCreation(item)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") setSelectedCreation(item); }} className={`gallery-card ${["rose", "violet", "amber", "cyan"][index % 4]}`}>{item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} controls onClick={event => event.stopPropagation()} /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}<div><em>{item.type} · {statusLabel(item.status)}</em><small>{relativeTime(item.createdAt)}</small><div className="gallery-actions">{item.assetUrl && <a href={`${item.assetUrl}?download=1`} download aria-label="İndir" title="İndir" onClick={event => event.stopPropagation()}><Download size={16} /></a>}<button onClick={event => { event.stopPropagation(); recreateCreation(item); }} aria-label="Yeni referansla yeniden oluştur" title="Yeni referansla yeniden oluştur"><RefreshCw size={16} /></button><button className="delete" onClick={event => { event.stopPropagation(); void deleteCreation(item); }} aria-label="Sil" title="Sil"><Trash2 size={16} /></button></div></div></article>)}</div></div>}
+
+        {selectedCreation && <div className="creation-modal" role="dialog" aria-modal="true" aria-label="Üretim detayı"><button className="modal-backdrop" aria-label="Kapat" onClick={() => setSelectedCreation(null)} /><div className="creation-modal-card"><button className="modal-close" onClick={() => setSelectedCreation(null)} aria-label="Kapat"><X size={17} /></button><div className="creation-modal-media">{selectedCreation.assetUrl ? selectedCreation.type === "Video" ? <video src={selectedCreation.assetUrl} controls autoPlay /> : <img src={selectedCreation.assetUrl} alt="Üretilen içerik" /> : <div className="fake-portrait"><span>H</span></div>}</div><div className="creation-modal-info"><span>{selectedCreation.type} · {statusLabel(selectedCreation.status)}</span><h3>Üretim detayı</h3><p>{relativeTime(selectedCreation.createdAt)}</p><div className="creation-detail-actions">{selectedCreation.assetUrl && <a href={`${selectedCreation.assetUrl}?download=1`} download><Download size={16} /> İndir</a>}<button onClick={() => recreateCreation(selectedCreation)}><RefreshCw size={16} /> Yeni referansla oluştur</button><button className="delete" onClick={() => void deleteCreation(selectedCreation)}><Trash2 size={16} /> Sil</button></div></div></div></div>}
 
         {view === "pricing" && <div className="page pricing-page"><div className="page-intro center"><span>ESNEK KAPASİTE</span><h2>Üretim hacmine göre büyü.</h2><p>İstediğin zaman yükselt, iptal et veya ek kredi al.</p>{notice && <div className="notice">{notice}</div>}</div><div className="pricing-grid">{plans.map(plan => <article key={plan.name} className={plan.popular ? "popular" : ""}>{plan.popular && <em>EN POPÜLER</em>}<h3>{plan.name}</h3><p>{plan.note}</p><div className="plan-price"><strong>{plan.price}</strong><span>/ay</span></div><div className="plan-credits">{plan.credits} kredi / ay</div><ul><li>✓ Hızlı üretim kuyruğu</li><li>✓ Ticari kullanım</li><li>✓ 180 gün galeri</li><li>✓ Güvenli yetişkin doğrulaması</li></ul><button disabled={busy || plan.current} onClick={() => void startCheckout(plan.id)}>{plan.current ? "Mevcut plan" : "Paketi seç"}</button></article>)}</div><button className="extra-credit" disabled={busy} onClick={() => void startCheckout("credits")}>10.000 ek kredi satın al</button></div>}
       </main>
@@ -393,15 +387,20 @@ function statusLabel(status: string) {
   return status === "completed" ? "Tamamlandı" : status === "failed" ? "Başarısız" : "İşleniyor";
 }
 
-function CreationGrid({ creations, compact = false }: { creations: Creation[]; compact?: boolean }) {
+function CreationGrid({ creations, compact = false, onOpen, onRecreate }: {
+  creations: Creation[];
+  compact?: boolean;
+  onOpen?: (item: Creation) => void;
+  onRecreate?: (item: Creation) => void;
+}) {
   if (!creations.length) {
     return <div className="empty-state">Henüz bir üretim yok. İlk içeriğini oluşturmaya başla.</div>;
   }
   return <div className={compact ? "creation-strip" : "result-grid"}>{creations.map((item, index) => {
     const className = compact ? `creation ${["rose", "violet", "amber", "cyan"][index % 4]}` : `result-card ${["rose", "violet", "amber", "cyan"][index % 4]}`;
-    return <article key={item.id} className={className}>
+    return <article key={item.id} className={className} role={onOpen ? "button" : undefined} tabIndex={onOpen ? 0 : undefined} onClick={() => onOpen?.(item)} onKeyDown={event => { if (onOpen && (event.key === "Enter" || event.key === " ")) onOpen(item); }}>
       {item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} muted /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}
-      <div><em>{item.type} · {statusLabel(item.status)}</em><strong>{item.title}</strong><small>{relativeTime(item.createdAt)}</small></div>
+      <div className="creation-meta"><em>{item.type} · {statusLabel(item.status)}</em><small>{relativeTime(item.createdAt)}</small>{compact && <div className="creation-actions">{item.assetUrl && <a href={`${item.assetUrl}?download=1`} download title="İndir" aria-label="İndir" onClick={event => event.stopPropagation()}><Download size={15} /></a>}<button title="Yeni referansla yeniden oluştur" aria-label="Yeni referansla yeniden oluştur" onClick={event => { event.stopPropagation(); onRecreate?.(item); }}><RefreshCw size={15} /></button></div>}</div>
     </article>;
   })}</div>;
 }

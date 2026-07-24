@@ -439,3 +439,53 @@ button svg,a svg{flex:none;pointer-events:none}
   box-shadow:0 -5px 0 2px #3a3e38;
 }
 .fake-portrait span{opacity:0}
+
+/* Native-ratio creation cards and production detail dialog */
+.creation{cursor:pointer}
+.creation>img,.creation>video,.gallery-card>img,.gallery-card>video{
+  width:100%;height:auto;max-height:520px;object-fit:contain;background:#0b0c0c
+}
+.creation>img,.creation>video{max-height:360px}
+.creation-meta{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.creation-meta p{margin:0}
+.creation-actions,.creation-detail-actions{display:flex;align-items:center;gap:8px}
+.creation-actions{padding-top:10px;border-top:1px solid var(--line)}
+.creation-actions .icon-button{flex:1}
+.gallery-card{cursor:pointer}
+.gallery-card:focus-visible,.creation:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.creation-modal{
+  position:fixed;inset:0;z-index:90;display:grid;place-items:center;
+  padding:max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right))
+    max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))
+}
+.creation-modal-card{
+  position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);
+  width:min(1120px,100%);max-height:calc(100dvh - 48px);overflow:hidden;
+  border:1px solid var(--line-strong);border-radius:24px;background:#111313;
+  box-shadow:0 28px 90px rgb(0 0 0 / 55%)
+}
+.creation-modal-media{
+  min-height:420px;overflow:auto;display:grid;place-items:center;padding:20px;background:#090a0a
+}
+.creation-modal-media img,.creation-modal-media video{
+  display:block;width:auto;max-width:100%;height:auto;max-height:calc(100dvh - 88px);
+  object-fit:contain;border-radius:16px
+}
+.creation-modal-info{
+  display:flex;flex-direction:column;gap:12px;min-width:0;padding:72px 24px 24px;
+  border-left:1px solid var(--line)
+}
+.creation-modal-info h3,.creation-modal-info p{margin:0}
+.creation-detail-actions{margin-top:auto;flex-wrap:wrap}
+.creation-detail-actions .button{flex:1 1 100%;justify-content:center}
+.creation-detail-actions .icon-button{flex:1}
+@media(max-width:760px){
+  .creation-modal{
+    padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+      max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))
+  }
+  .creation-modal-card{grid-template-columns:1fr;max-height:calc(100dvh - 24px);overflow-y:auto}
+  .creation-modal-media{min-height:280px;padding:12px}
+  .creation-modal-media img,.creation-modal-media video{max-height:60dvh}
+  .creation-modal-info{padding:20px;border-top:1px solid var(--line);border-left:0}
+}
