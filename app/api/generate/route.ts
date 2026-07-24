@@ -145,6 +145,7 @@ export async function POST(request: Request) {
         const { eq } = await import("drizzle-orm");
         await db.update(generations).set({
           status: "failed",
+          creditsCharged: 0,
           errorMessage: error instanceof Error ? error.message : "Üretim başarısız.",
           updatedAt: new Date(),
         }).where(eq(generations.id, reservation.id));

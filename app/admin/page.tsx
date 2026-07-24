@@ -21,7 +21,9 @@ export default async function AdminPage() {
     db.select({ value: sql<number>`count(*)` }).from(users),
     db.select({ value: sql<number>`count(*)` }).from(generations),
     db.select({ value: sql<number>`count(*)` }).from(subscriptions).where(eq(subscriptions.status, "active")),
-    db.select({ value: sql<number>`coalesce(sum(-${creditLedger.amount}), 0)` }).from(creditLedger).where(sql`${creditLedger.amount} < 0`),
+    db.select({ value: sql<number>`coalesce(sum(-${creditLedger.amount}), 0)` })
+      .from(creditLedger)
+      .where(sql`${creditLedger.reason} LIKE 'generation_%'`),
     db.select({
       id: generations.id,
       status: generations.status,
@@ -44,7 +46,7 @@ export default async function AdminPage() {
       <div className="admin-panel-title"><h2>Son üretimler</h2><span>Kullanıcı, araç ve durum takibi</span></div>
       <div className="admin-table">
         <div className="admin-row admin-labels"><span>Kullanıcı</span><span>Araç</span><span>Durum</span><span>Kredi</span><span>Tarih</span></div>
-        {recent.map(item => <div className="admin-row" key={item.id}><span>{item.email}</span><span>{item.tool}</span><span className={`status ${item.status}`}>{item.status}</span><span>{item.credits}</span><span>{new Date(item.createdAt).toLocaleString("tr-TR")}</span></div>)}
+        {recent.map(item => <div className="admin-row" key={item.id}><span>{item.email}</span><span>{item.tool}</span><span className={`status ${item.status}`}>{item.status}</span><span>{item.status === "failed" ? 0 : item.credits}</span><span>{new Date(item.createdAt).toLocaleString("tr-TR")}</span></div>)}
       </div>
     </section>
   </main>;
