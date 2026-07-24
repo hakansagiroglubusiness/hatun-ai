@@ -392,3 +392,18 @@ button svg,a svg{flex:none;pointer-events:none}
 @media(pointer:coarse){
   .gallery-actions a,.gallery-actions button,.prompt-copy-icon,.modal-close,.icon-button{min-width:44px;min-height:44px}
 }
+
+/* Processing feedback */
+@keyframes hatun-spin{to{transform:rotate(360deg)}}
+@keyframes hatun-progress{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+.spin{animation:hatun-spin .85s linear infinite}
+.notice.processing{position:relative;overflow:hidden;padding-left:14px}
+.notice.processing:before{
+  content:"";position:absolute;left:0;top:0;width:34%;height:2px;
+  background:linear-gradient(90deg,transparent,#d9ff4f,transparent);
+  animation:hatun-progress 1.35s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce){
+  .spin{animation:none}
+  .notice.processing:before{animation:none;left:0;width:100%;opacity:.55}
+}

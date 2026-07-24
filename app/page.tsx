@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight, Blocks, Check, Command, Copy, Download, Expand, HomeIcon,
-  ImageIcon, Images, Library, Menu, MoreHorizontal, Pencil, Play, Plus,
+  ImageIcon, Images, Library, LoaderCircle, Menu, MoreHorizontal, Pencil, Play, Plus,
   RefreshCw, ScanFace, Search, Shirt, Sparkles, Trash2, Upload, Video, WandSparkles, X,
 } from "lucide-react";
 
@@ -26,7 +26,7 @@ type AccountResponse = {
   user: { credits: number; displayName: string };
   generations: Creation[];
 };
-type PromptResponse = { error?: string; prompt: string };
+type PromptResponse = { error?: string; prompt?: string };
 type UploadResponse = { error?: string; uploads?: Array<{ id: string }> };
 type GenerateResponse = {
   error?: string;
@@ -181,12 +181,19 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, mode: tool }),
       });
-      const data = await response.json() as PromptResponse;
-      if (!response.ok) throw new Error(data.error || "Prompt geliştirilemedi.");
+      const data = await response.json().catch(() => ({})) as PromptResponse;
+      if (!response.ok) {
+        throw new Error(data.error || "Prompt şu anda geliştirilemedi. Lütfen kısa bir süre sonra yeniden deneyin.");
+      }
+      if (typeof data.prompt !== "string" || !data.prompt.trim()) {
+        throw new Error("Prompt geliştirildi ancak geçerli bir sonuç alınamadı. Metniniz korunuyor; lütfen yeniden deneyin.");
+      }
       setPrompt(data.prompt);
       setNotice("Prompt Hatun AI tarafından geliştirildi.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Bir hata oluştu.");
+      setNotice(error instanceof Error
+        ? error.message
+        : "Prompt şu anda geliştirilemedi. Metniniz korunuyor; lütfen yeniden deneyin.");
     } finally {
       setBusy(false);
     }
@@ -354,11 +361,11 @@ export default function Home() {
                 <div className="field"><label>Araç</label><select value={tool} onChange={event => openTool(event.target.value as StudioTool)}>{tools.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></div>
                 <div className="field"><label>Model</label><select value={model} onChange={event => setModel(event.target.value)}>{models[tool].map(item => <option key={item}>{item}</option>)}</select></div>
                 <div className="field"><label>Referanslar <span>{selectedFiles.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/*,video/*,.pdf" onClick={event => { event.currentTarget.value = ""; }} onChange={event => { const files = Array.from(event.target.files || []).slice(0, 8); const oversized = files.find(file => file.size > 900 * 1024); if (oversized) { setSelectedFiles([]); setUploadIds([]); setNotice(`${oversized.name} yükleme sınırını aşıyor. Her dosya en fazla 900 KB olabilir.`); return; } setSelectedFiles(files); setUploadIds([]); setNotice(""); }} /><b><Upload size={17} /></b><span>{selectedFiles.length ? selectedFiles.map(file => file.name).join(", ") : tool === "motion" ? "Karakter görseli ve hareket videosu ekle" : "Referans dosyaları ekle"}</span></label>{tool === "image" && <small>İlk görsel ana karakter/kompozisyon, diğerleri stil, kıyafet veya sahne referansı olarak kullanılır.</small>}</div>
-                {!["motion", "tryon", "swap", "upscale"].includes(tool) && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={tool === "clone" ? "Referans görselden çıkarılacak sahneyi açıklayabilirsin." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}><WandSparkles size={15} /> {busy ? "İşleniyor…" : "Hatun AI ile geliştir"}</button></div>}
+                {!["motion", "tryon", "swap", "upscale"].includes(tool) && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={tool === "clone" ? "Referans görselden çıkarılacak sahneyi açıklayabilirsin." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}>{busy ? <><LoaderCircle className="spin" size={15} /> İşleniyor…</> : <><WandSparkles size={15} /> Hatun AI ile geliştir</>}</button></div>}
                 {["tryon", "swap"].includes(tool) && <label className="consent-check"><input type="checkbox" checked={consentConfirmed} onChange={event => setConsentConfirmed(event.target.checked)} /><span>Görüntüdeki herkesin 18 yaşından büyük olduğunu ve bu işlem için açık rızası bulunduğunu onaylıyorum.</span></label>}
                 <div className="inline-options"><label>Oran<select value={ratio} onChange={event => setRatio(event.target.value)}><option>9:16</option><option>1:1</option><option>16:9</option><option>3:4</option></select></label><label>Kalite<select value={quality} onChange={event => setQuality(event.target.value)}><option>2K</option><option>1K</option><option>HD</option></select></label>{tool === "video" && <label>Süre<select value={seconds} onChange={event => setSeconds(event.target.value)}><option value="4">4 sn</option><option value="8">8 sn</option><option value="12">12 sn</option></select></label>}</div>
-                <div className="estimate"><div><span>Tahmini maliyet</span><strong>{costs[tool]} kredi</strong></div><button onClick={generate} disabled={busy}>{busy ? "İşleniyor…" : tool === "clone" ? "Promptu klonla" : "Üret"} <ArrowUpRight size={16} /></button></div>
-                {notice && <div className="notice">{notice}</div>}
+                <div className="estimate"><div><span>Tahmini maliyet</span><strong>{costs[tool]} kredi</strong></div><button onClick={generate} disabled={busy}>{busy ? <><LoaderCircle className="spin" size={17} /> İşleniyor…</> : <>{tool === "clone" ? "Promptu klonla" : "Üret"} <ArrowUpRight size={16} /></>}</button></div>
+                {notice && <div className={`notice ${busy ? "processing" : ""}`}>{notice}</div>}
               </section>
               <section className="results-panel">
                 <div className="panel-title"><div><span>CREATIONS</span><h3>Üretimler</h3></div><button className="text-icon-button" onClick={() => void loadAccount()}><RefreshCw size={14} /> Yenile</button></div>
