@@ -128,3 +128,104 @@ button,input,select,textarea{outline-color:var(--hot)}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* Midnight Cherry — Pluggo-inspired dark premium system */
+:root{
+  color-scheme:dark;
+  --bg:#09090b;
+  --panel:#111114;
+  --panel2:#18181c;
+  --line:#29292f;
+  --muted:#98989f;
+  --text:#f5f5f7;
+  --hot:#f04468;
+  --orange:#ff795f;
+  --green:#68df9a;
+}
+html,body{background:#09090b;color:#f5f5f7}
+body{background-image:radial-gradient(circle at 74% -10%,rgba(240,68,104,.15),transparent 30%)}
+::selection{background:rgba(240,68,104,.32);color:#fff}
+.app-shell{background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 32%)}
+.sidebar{
+  border-color:#26262b;background:rgba(11,11,13,.9);
+  box-shadow:12px 0 50px rgba(0,0,0,.2);backdrop-filter:blur(28px) saturate(145%);
+}
+.side-brand strong{color:#f5f5f7}
+.hatun-logo{background:linear-gradient(145deg,#ff5a76,#c81f4b);box-shadow:0 12px 32px rgba(240,68,104,.25)}
+.create-btn{border-color:#f14c6e;background:linear-gradient(135deg,#f04468,#c81f4b);color:#fff;box-shadow:0 12px 28px rgba(240,68,104,.19)}
+.create-btn:hover{background:linear-gradient(135deg,#fa5476,#d52552);box-shadow:0 16px 36px rgba(240,68,104,.27)}
+.side-nav button{color:#929299}.side-nav button:hover{background:#18181c;color:#f5f5f7}
+.side-nav button.active{background:#21151a;color:#fff;box-shadow:inset 3px 0 #f04468}
+.nav-label{color:#5f5f67}.reward{border-color:#32252a;background:#171114}
+.reward span{color:#8f888b}.reward strong{color:#ff6a86}
+.profile>span,.avatar{background:#282126;border-color:#44343a;color:#fff}
+.profile strong{color:#f5f5f7}.profile small,.profile b{color:#797980}
+.topbar{border-color:#26262b;background:rgba(9,9,11,.76);backdrop-filter:blur(26px) saturate(155%)}
+.search-pill,.credit-pill{border-color:#2c2c32;background:rgba(20,20,23,.86);color:#929299;box-shadow:none}
+.search-pill kbd{background:#25252a;color:#b4b4ba}.credit-pill{color:#f5f5f7}.credit-pill span{color:#ff5c79}
+.welcome{
+  border-color:#33252a;border-radius:28px;
+  background:linear-gradient(120deg,#151518 0%,#101012 58%,#220e15 100%);
+  box-shadow:0 28px 80px rgba(0,0,0,.25);
+}
+.welcome:before{background:#9b183a;filter:blur(100px);opacity:.38}
+.welcome h2{color:#fff}.welcome p{color:#99999f}
+.welcome-tag,.page-intro>span,.page-intro>div>span,.panel-title>div>span,.usage-card>span{color:#ff5c79}
+.orbit{border-color:#7a293c}.orbit.o1{box-shadow:0 0 55px rgba(240,68,104,.12)}
+.quick-grid>button,.all-tools>button{
+  border-color:#29292f;background:linear-gradient(145deg,#151518,#101012);
+  box-shadow:0 12px 36px rgba(0,0,0,.14);
+}
+.quick-grid>button:hover,.all-tools>button:hover{border-color:#57333d;box-shadow:0 18px 46px rgba(0,0,0,.25)}
+.tool-icon,.all-tools>button>span{background:#26161c;color:#ff5c79}
+.quick-grid small,.all-tools p{color:#818188}.quick-grid b{color:#66666d}.all-tools em{color:#6f6f76}.all-tools b{color:#ff617d}
+.panel,.usage-card,.config-panel,.results-panel{
+  border-color:#29292f;background:linear-gradient(145deg,#131316,#0f0f11);
+  box-shadow:0 14px 42px rgba(0,0,0,.15);
+}
+.panel-title>button{color:#8d8d95}
+.creation,.result-card,.gallery-card{border-color:#29292f;background:#17171a}
+.creation small,.result-card small,.gallery-card small{color:#707077}
+.creation em,.result-card em,.gallery-card em{color:#ff637e}
+.usage-card p,.usage-card small{color:#7e7e86}.meter{background:#28282d}.meter i{background:linear-gradient(90deg,#f04468,#ff795f)}
+.usage-card button,.extra-credit{border-color:#58313b;background:#21151a;color:#ff6681}
+.studio-tabs{border-color:#29292f}.studio-tabs button{color:#7f7f86}.studio-tabs button.active{color:#fff;border-color:#f04468}
+.field>label:first-child{color:#aaaab0}
+.field select,.inline-options select,.library-search{border-color:#303036;background:#19191d;color:#f0f0f2;box-shadow:none}
+.upload{border-color:#3a3a40;background:#151518;color:#85858c}.upload b{background:#28171d;color:#ff5d79}
+.prompt-field textarea{border-color:#303036;background:#17171a;color:#f2f2f4}
+.enhance{border-color:#51303a;background:#21151a;color:#ff6a84}
+.inline-options label,.estimate div>span{color:#7d7d84}.estimate{border-color:#29292f}
+.estimate button{background:linear-gradient(135deg,#f04468,#c81f4b);color:#fff;box-shadow:0 9px 22px rgba(240,68,104,.18)}
+.estimate button:hover:not(:disabled){background:linear-gradient(135deg,#fa5476,#d52552)}
+.notice{color:#ff91a5;background:#211217;border-color:#47252e}
+.mini-filters button,.gallery-filters button{border-color:#303036;background:#19191d;color:#85858c}
+.mini-filters button.active,.gallery-filters button.active{color:#fff;background:#2a171e;border-color:#663141}
+.page-intro p{color:#898990}
+.prompt-grid article,.pricing-grid article,.admin-metrics article,.admin-panel{
+  border-color:#29292f;background:linear-gradient(145deg,#141417,#101012);box-shadow:0 12px 38px rgba(0,0,0,.16)
+}
+.prompt-grid article p,.library-count,.pricing-grid article>p,.pricing-grid li,.plan-price span{color:#7f7f86}
+.prompt-grid article>button,.prompt-actions button,.gallery-card a,.admin-head a,.admin-empty a{color:#ff637e}
+.prompt-preview{background:#0b0b0d!important}
+.gallery-card{background:#121215;box-shadow:0 10px 34px rgba(0,0,0,.16)}
+.gallery-card button{color:#797980}
+.pricing-grid article.popular{border-color:#733142;background:linear-gradient(150deg,#211219,#111114)}
+.pricing-grid article>em{color:#ff637e}.plan-credits{color:#aaaab0;border-color:#29292f}
+.pricing-grid article>button{border-color:#5d3440;background:#24171c;color:#ff6a84}
+.pricing-grid article.popular>button{border-color:#f04468;background:linear-gradient(135deg,#f04468,#c81f4b);color:#fff}
+.pricing-grid article>button:disabled{color:#77777e;border-color:#303036;background:#18181b}
+.consent-check{color:#aaa1a5;border-color:#4b2731;background:#201217}
+.empty-state{border-color:#313137;color:#807a7d;background:#101012}
+.admin-head span{color:#ff5c79}.admin-metrics span,.admin-panel-title span{color:#7f7f86}.admin-row{border-color:#29292f;color:#b4b4ba}.admin-labels{color:#6e6e75}
+.prompt-modal .modal-backdrop{background:rgba(0,0,0,.8)}
+.prompt-modal-card{border-color:#34343a;background:#121214;box-shadow:0 34px 110px rgba(0,0,0,.58)}
+.prompt-modal-card>img{background:#09090b}.prompt-modal-content>span{color:#ff637e}
+.prompt-modal-content pre{color:#c8c3c6;background:#0c0c0e;border-color:#2d2d32}
+.modal-close{border-color:#3a3a40;background:rgba(20,20,23,.94);color:#fff}
+.prompt-modal-actions button{border-color:#5d3440;background:#24171c;color:#ff6a84}
+.prompt-modal-actions button:last-child{background:linear-gradient(135deg,#f04468,#c81f4b);color:#fff}
+@media(max-width:780px){
+  .sidebar{box-shadow:20px 0 65px rgba(0,0,0,.45)}
+  .topbar{background:rgba(9,9,11,.9)}
+}
