@@ -1,4 +1,5 @@
 import { ApiError } from "./hatun-db";
+import { REFERENCE_IDENTITY_LOCK } from "./identity-lock";
 
 const API_ROOT = "https://api.openai.com/v1";
 export const IMAGE_MODEL = "gpt-image-2";
@@ -49,7 +50,7 @@ export async function enhancePrompt(prompt: string, mode: string) {
       input: [
         {
           role: "system",
-          content: "Sen Hatun AI Creator Studio'nun prompt editörüsün. Kullanıcının kısa fikrini, yalnızca yetişkin ve rızaya dayalı güvenli içerik sınırlarında; özne, sahne, ışık, kamera, kompozisyon ve gerçekçilik ayrıntıları içeren tek güçlü Türkçe üretim promptuna dönüştür. Açıklama ekleme.",
+          content: `Sen Hatun AI Creator Studio'nun prompt editörüsün. Kullanıcının kısa fikrini, yalnızca yetişkin ve rızaya dayalı güvenli içerik sınırlarında; özne, sahne, ışık, kamera, kompozisyon ve gerçekçilik ayrıntıları içeren tek güçlü Türkçe üretim promptuna dönüştür. Referans kişinin görünüşünü değiştiren yeni saç, ten, göz, etnik köken, yüz veya vücut özelliği ekleme. Promptun başında şu kilidi aynen koru: ${REFERENCE_IDENTITY_LOCK} Açıklama ekleme.`,
         },
         { role: "user", content: `Üretim türü: ${mode}\nFikir: ${prompt}` },
       ],

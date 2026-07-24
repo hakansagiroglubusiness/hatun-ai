@@ -12,6 +12,7 @@ import {
   TOOL_COSTS,
   type ToolId,
 } from "@/lib/hatun-db";
+import { withReferenceIdentityLock } from "@/lib/identity-lock";
 import { createVideo, describeImage, editImage, generateImage, IMAGE_MODEL } from "@/lib/openai";
 
 const VALID_TOOLS = new Set(Object.keys(TOOL_COSTS));
@@ -105,11 +106,8 @@ export async function POST(request: Request) {
       if (tool === "image") {
         if (imageReferenceFiles.length) {
           const referencePrompt = [
-            "Bu görselleri yeni üretim için referans olarak kullan.",
-            "İlk görsel ana özne, kimlik ve kompozisyon referansıdır.",
-            "Varsa sonraki görseller stil, kıyafet, ürün ve sahne ayrıntıları için ek referanslardır.",
-            "Kullanıcı açıkça değiştirmedikçe yüzü, kimliği, saçları, ten tonunu, vücut oranlarını ve ayırt edici ayrıntıları yüksek sadakatle koru.",
-            `Kullanıcının isteği: ${prompt}`,
+            withReferenceIdentityLock(prompt),
+            "The first image is the identity reference. Any later images are secondary references only for outfit, product, style, or setting.",
           ].join("\n");
           result = await editImage(imageReferenceFiles, referencePrompt, String(body.ratio || "9:16"));
         } else {
@@ -121,7 +119,12 @@ export async function POST(request: Request) {
           swap: "Açık rıza verilmiş yetişkin referanslar arasında yüz değişimini gerçekçi biçimde uygula. Yüz dışındaki kompozisyonu, pozu, ışığı ve arka planı koru.",
           upscale: "Görseli doğal ayrıntıları koruyarak yüksek çözünürlüklü hâle getir. Keskinliği ve dokuyu iyileştir; kimliği, kompozisyonu ve renkleri değiştirme.",
         };
-        result = await editImage(imageReferenceFiles, prompt || instructions[tool], String(body.ratio || "9:16"));
+        const editPrompt = prompt || instructions[tool];
+        result = await editImage(
+          imageReferenceFiles,
+          withReferenceIdentityLock(editPrompt),
+          String(body.ratio || "9:16"),
+        );
       }
       const assetKey = `users/${user.id}/generations/${id}.webp`;
       await storeBytes(assetKey, result.bytes, result.contentType);
@@ -137,10 +140,11 @@ export async function POST(request: Request) {
       }, { status: 201 });
     }
 
-    const videoPrompt = tool === "motion"
+    const baseVideoPrompt = tool === "motion"
       ? `${prompt}. Referans karakterin görünüşünü koruyarak doğal, akıcı ve sinematik hareket üret.`
       : prompt;
     const reference = referenceFiles.find(file => file.type.startsWith("image/"));
+    const videoPrompt = reference ? withReferenceIdentityLock(baseVideoPrompt) : baseVideoPrompt;
     const video = await createVideo(videoPrompt, String(body.seconds || "8"), String(body.ratio || "9:16"), reference);
     await db.update(generations).set({
       status: String(video.status || "queued"),
