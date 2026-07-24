@@ -1,254 +1,224 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const Arrow = () => <span aria-hidden="true">↗</span>;
-const Check = () => <span className="check" aria-hidden="true">✓</span>;
+type View = "home" | "studio" | "gallery" | "prompts" | "tools" | "pricing";
+type StudioTool = "image" | "video" | "motion" | "clone" | "tryon" | "swap" | "upscale";
 
-const features = [
-  {
-    num: "01",
-    title: "AI Influencers",
-    text: "Create hyper-realistic AI models with their own face, body, and personality — and keep the same face on every single generation.",
-    image: "/assets/model-1.jpg",
-  },
-  {
-    num: "02",
-    title: "Motion Control",
-    text: "Transfer motion from a reference video to any character. Perfect lip sync, synced expressions, and fluid gestures.",
-    accent: true,
-  },
-  {
-    num: "03",
-    title: "Full HD Images",
-    text: "Generate professional high-definition photos with realistic lighting, cinematic composition, and crisp detail.",
-    image: "/assets/model-2.jpg",
-  },
-  {
-    num: "04",
-    title: "Ultra-Realistic Videos",
-    text: "Access the best generation models in one place. Cinema-grade quality, natural motion, and realistic physics.",
-    accent: true,
-  },
-];
+const tools = [
+  { id: "image", title: "Görsel üret", text: "Metin ve referanslardan yüksek kaliteli görseller", icon: "✦", type: "Görsel" },
+  { id: "video", title: "Video üret", text: "Görselden veya metinden akıcı videolar", icon: "▶", type: "Video" },
+  { id: "motion", title: "Motion Control", text: "Bir videodaki hareketi karakterine aktar", icon: "◉", type: "Video" },
+  { id: "clone", title: "Prompt klonla", text: "Bir görseli yeniden üretecek promptu çıkar", icon: "⌘", type: "Prompt" },
+  { id: "tryon", title: "Sanal giydirme", text: "Kıyafeti seçtiğin yetişkin modele uygula", icon: "♢", type: "Görsel" },
+  { id: "swap", title: "İzinli yüz değişimi", text: "Yalnızca açık rızalı yetişkin içeriklerinde", icon: "◎", type: "Görsel" },
+  { id: "upscale", title: "Görsel iyileştir", text: "Keskinlik, detay ve çözünürlüğü yükselt", icon: "↗", type: "Görsel" },
+] as const;
 
-const stack = [
-  ["ChatGPT Pro", "Sora 2 + Image 2", "$200/mo"],
-  ["Google Flow Ultra", "Veo 3.1 + Nano Banana", "$250/mo"],
-  ["Magnific AI", "Skin Enhancer + Upscale 4K", "$98/mo"],
-  ["Kling AI Pro", "Kling + Motion Control", "$36/mo"],
-  ["ElevenLabs Pro", "Audio + Voiceovers", "$98/mo"],
-  ["X Premium+", "Super Grok Imagine", "$40/mo"],
+const models: Record<StudioTool, string[]> = {
+  image: ["GPT Image 2", "Nano Banana 2", "Nano Banana Pro", "Seedream Lite", "Hatun Real"],
+  video: ["Veo 3.1 Fast", "Veo 3.1 Quality", "Seedance 2", "Kling V3 Turbo", "Hatun Fast"],
+  motion: ["Hatun Motion"],
+  clone: ["Hatun Vision"],
+  tryon: ["Hatun Try-On"],
+  swap: ["Hatun Consent Swap"],
+  upscale: ["Hatun HD"],
+};
+
+const costs: Record<StudioTool, number> = { image: 60, video: 350, motion: 70, clone: 5, tryon: 45, swap: 50, upscale: 25 };
+
+const promptCards = [
+  ["Gün batımı portresi", "Yumuşak altın saat ışığında, 35mm lens hissi veren doğal ve samimi yetişkin portresi."],
+  ["Şehir gecesi", "Neon ışıklı modern şehir sokağında, spontan telefon fotoğrafı estetiğinde yetişkin içerik üreticisi."],
+  ["Minimal stüdyo", "Kırık beyaz fonda, yumuşak gölgeli ve temiz ürün kampanyası estetiğinde portre."],
+  ["Sahil yaşamı", "Sabah ışığında sahil yürüyüşü, doğal rüzgâr, gerçek telefon kamerası dokusu."],
+  ["Lüks otel", "Sıcak iç mekân ışığında modern otel lobisi, rahat ve kendinden emin poz."],
+  ["Fitness UGC", "Aydınlık spor salonunda doğal, reklam gibi görünmeyen mobil UGC karesi."],
 ];
 
 const plans = [
-  {
-    name: "Starter",
-    desc: "For your first AI model",
-    price: "$2.90",
-    credits: "1,000 credits / month",
-    features: ["Consistent AI model", "HD image generation", "Video generation", "Commercial usage"],
-  },
-  {
-    name: "Creator",
-    desc: "For creators ready to scale",
-    price: "$19",
-    credits: "10,000 credits / month",
-    features: ["Everything in Starter", "Motion control", "Priority generation", "No watermarks", "Extra credit packs"],
-    popular: true,
-  },
-  {
-    name: "Agency",
-    desc: "For multi-account operations",
-    price: "$49",
-    credits: "30,000 credits / month",
-    features: ["Everything in Creator", "Multiple AI personas", "Ultra-realistic video", "Team-ready workflow", "Priority support"],
-  },
+  { name: "Creator", price: "$19.90", credits: "12.000", note: "Bireysel üreticiler", current: true },
+  { name: "Pro", price: "$39.90", credits: "30.000", note: "Düzenli içerik üretimi", popular: true },
+  { name: "Advanced", price: "$54.90", credits: "50.000", note: "Yüksek hacimli ekipler" },
+  { name: "Studio", price: "$79.90", credits: "80.000", note: "Ajanslar ve ekipler" },
 ];
 
-const audiences = [
-  ["01", "Solo Fanvue Creators", "Launch your first AI model without showing your face and without hiring anyone."],
-  ["02", "OFM Operators", "Manage several models at once with content running on an assembly line."],
-  ["03", "OFM Agencies", "Multiply accounts without bloating your team or production costs."],
-  ["04", "Chatters & Managers", "Always have fresh, consistent content on hand to keep subscribers engaged."],
+const initialCreations = [
+  { id: 1, type: "Görsel", title: "Altın saat portresi", time: "12 dakika önce", color: "rose" },
+  { id: 2, type: "Video", title: "Şehir yürüyüşü", time: "1 saat önce", color: "violet" },
+  { id: 3, type: "Görsel", title: "Minimal stüdyo", time: "Dün", color: "amber" },
+  { id: 4, type: "Görsel", title: "Sahil kampanyası", time: "2 gün önce", color: "cyan" },
 ];
 
-const testimonials = [
-  ["LF", "Lucas Ferreira", "@lucasferreira.ai · OFM Operator", "I scaled from 1 to 6 models in two months. The face comes out identical on every generation."],
-  ["MC", "Mariana Costa", "@maricosta.digital · Fanvue Creator", "I launched without showing my face and hit my first subscriber goal in 3 weeks."],
-  ["RS", "Rafael Souza", "@rafasouza.mkt · OFM Agency", "We feed 12 accounts with a lean team. The content assembly line protects our margin."],
-];
-
-const faqs = [
-  ["How do I get started?", "Create your account in under 2 minutes, pick a plan, and you'll instantly get credits to generate your first AI model."],
-  ["Do I need to install anything?", "No. The AI Model Lab runs 100% online in your browser, on desktop and mobile."],
-  ["Can I use the content to monetize on Fanvue?", "Yes. The platform is built to feed Fanvue and other subscription platforms, subject to each platform's rules."],
-  ["Do videos have a watermark?", "Not on paid plans. All content you generate is yours and ready to publish."],
-  ["Can I keep the same face across every generation?", "Yes. Lock your model's identity and keep a recognizable, consistent face across photos and videos."],
-  ["Can I cancel anytime?", "Yes. There are no penalties or cancellation fees, and access continues through your paid period."],
-];
+function Logo() {
+  return <div className="hatun-logo"><span>H</span></div>;
+}
 
 export default function Home() {
-  const [openFaq, setOpenFaq] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [view, setView] = useState<View>("home");
+  const [tool, setTool] = useState<StudioTool>("image");
+  const [prompt, setPrompt] = useState("");
+  const [model, setModel] = useState(models.image[0]);
+  const [credits, setCredits] = useState(12000);
+  const [creations, setCreations] = useState(initialCreations);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [files, setFiles] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [galleryFilter, setGalleryFilter] = useState("Tümü");
+  const [mobileNav, setMobileNav] = useState(false);
+
+  const filteredPrompts = promptCards.filter(([title, text]) => `${title} ${text}`.toLowerCase().includes(search.toLowerCase()));
+  const filteredCreations = useMemo(() => creations.filter(c => galleryFilter === "Tümü" || c.type === galleryFilter), [creations, galleryFilter]);
+
+  const openTool = (next: StudioTool) => {
+    setTool(next);
+    setModel(models[next][0]);
+    setView("studio");
+    setFiles([]);
+    setNotice("");
+    setMobileNav(false);
+  };
+
+  const enhancePrompt = async () => {
+    if (!prompt.trim()) return setNotice("Önce kısa bir fikir yaz.");
+    setBusy(true);
+    setNotice("");
+    try {
+      const response = await fetch("/api/prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, mode: tool }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Prompt geliştirilemedi.");
+      setPrompt(data.prompt);
+      setNotice("Prompt Hatun AI tarafından geliştirildi.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Bir hata oluştu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const generate = () => {
+    const cost = costs[tool];
+    if (credits < cost) return setNotice("Bu işlem için yeterli kredin yok.");
+    if (["image", "video"].includes(tool) && !prompt.trim()) return setNotice("Üretim için bir prompt yaz.");
+    if (["motion", "tryon", "swap", "upscale", "clone"].includes(tool) && files.length === 0) return setNotice("Bu araç için en az bir dosya ekle.");
+    setBusy(true);
+    setNotice("Üretim kuyruğa alındı…");
+    window.setTimeout(() => {
+      setCredits(v => v - cost);
+      setCreations(prev => [{ id: Date.now(), type: tool === "video" || tool === "motion" ? "Video" : "Görsel", title: prompt.slice(0, 42) || tools.find(t => t.id === tool)?.title || "Yeni üretim", time: "Az önce", color: ["rose", "violet", "amber", "cyan"][prev.length % 4] }, ...prev]);
+      setBusy(false);
+      setNotice("Önizleme üretildi. Gerçek sağlayıcı bağlantısı yayın ortamında etkinleştirilecek.");
+    }, 900);
+  };
+
+  const handleFiles = (list: FileList | null) => {
+    if (!list) return;
+    setFiles(Array.from(list).slice(0, 8).map(f => f.name));
+  };
 
   return (
-    <main>
-      <header className="nav shell">
-        <a className="brand" href="#" aria-label="The AI Model Lab home">
-          <img src="/assets/logo.png" alt="" />
-        </a>
-        <nav className={menuOpen ? "navlinks open" : "navlinks"} aria-label="Main navigation">
-          <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
-          <a href="#results" onClick={() => setMenuOpen(false)}>Results</a>
-          <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
-          <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
+    <div className="app-shell">
+      <aside className={mobileNav ? "sidebar open" : "sidebar"}>
+        <div className="side-brand"><Logo /><strong>Hatun</strong><button className="nav-close" onClick={() => setMobileNav(false)}>×</button></div>
+        <button className="create-btn" onClick={() => openTool("image")}><span>＋</span> Yeni üretim</button>
+        <nav className="side-nav" aria-label="Ana menü">
+          <button className={view === "home" ? "active" : ""} onClick={() => { setView("home"); setMobileNav(false); }}>⌂ <span>Ana sayfa</span></button>
+          <button className={view === "gallery" ? "active" : ""} onClick={() => { setView("gallery"); setMobileNav(false); }}>▦ <span>Galeri</span></button>
+          <button className={view === "prompts" ? "active" : ""} onClick={() => { setView("prompts"); setMobileNav(false); }}>⌘ <span>Prompt kütüphanesi</span></button>
         </nav>
-        <div className="nav-actions">
-          <a className="button ghost" href="#pricing">Sign in</a>
-          <a className="button primary" href="#pricing">Start Now</a>
+        <div className="nav-label">ARAÇLAR</div>
+        <nav className="side-nav compact">
+          <button className={view === "tools" ? "active" : ""} onClick={() => { setView("tools"); setMobileNav(false); }}>✣ <span>Tüm araçlar</span></button>
+          <button onClick={() => openTool("image")}>✦ <span>Görsel üret</span></button>
+          <button onClick={() => openTool("video")}>▶ <span>Video üret</span></button>
+          <button onClick={() => openTool("clone")}>⌘ <span>Prompt klonla</span></button>
+        </nav>
+        <div className="side-bottom">
+          <div className="reward"><span>Haftalık ödül</span><strong>4 gün · +400</strong></div>
+          <button className="profile"><span>H</span><div><strong>Hakan</strong><small>{credits.toLocaleString("tr-TR")} kredi</small></div><b>•••</b></button>
         </div>
-        <button className="menu" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation" aria-expanded={menuOpen}>
-          <span /><span />
-        </button>
-      </header>
+      </aside>
 
-      <section className="hero shell">
-        <div className="orb orb-one" />
-        <div className="eyebrow">The AI model factory for OFM agencies</div>
-        <h1>Build and scale AI<br />models that earn on<br /><span>Fanvue.</span></h1>
-        <p>Create dozens of hyper-realistic personas with a 100% consistent face and mass-produce content to feed every account. No real models, no photographer, no bloating your team.</p>
-        <a className="button primary hero-cta" href="#pricing">Create your first model <Arrow /></a>
-        <div className="micro"><span className="pulse" /> Your first model ready in under 2 minutes</div>
-      </section>
+      <main className="workspace">
+        <header className="topbar">
+          <button className="mobile-menu" onClick={() => setMobileNav(true)}>☰</button>
+          <div><h1>{view === "home" ? "Ana sayfa" : view === "studio" ? "Üretim stüdyosu" : view === "gallery" ? "Galeri" : view === "prompts" ? "Prompt kütüphanesi" : view === "tools" ? "Tüm araçlar" : "Paketler"}</h1></div>
+          <div className="top-actions"><button className="search-pill">⌕ <span>Ara</span><kbd>⌘ K</kbd></button><button className="credit-pill" onClick={() => setView("pricing")}><span>✦</span>{credits.toLocaleString("tr-TR")}</button><button className="avatar">H</button></div>
+        </header>
 
-      <section className="stats shell">
-        {["+2,000 Active Creators", "+1.8M Images Generated", "+310K Videos Created"].map((item) => {
-          const [value, ...label] = item.split(" ");
-          return <div className="stat" key={item}><strong>{value}</strong><span>{label.join(" ")}</span></div>;
-        })}
-      </section>
-
-      <section className="section shell" id="features">
-        <div className="section-head">
-          <div>
-            <div className="kicker">Everything for your OFM operation</div>
-            <h2>A full assembly line to build and scale your AI models.</h2>
-          </div>
-          <p>Consistent face, photos, videos, motion, and voice — all with AI, all in one place, ready to feed Fanvue.</p>
-        </div>
-        <div className="feature-grid">
-          {features.map((item) => (
-            <article className={`feature-card ${item.accent ? "accent-card" : ""}`} key={item.title}>
-              {item.image ? <img src={item.image} alt="" /> : <div className="motion-art"><div className="rings" /><div className="play">▶</div></div>}
-              <div className="feature-copy">
-                <span>{item.num}</span>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
+        {view === "home" && (
+          <div className="page home-page">
+            <section className="welcome">
+              <div><span className="welcome-tag">HATUN CREATOR STUDIO</span><h2>Bugün ne<br />üretiyoruz?</h2><p>Karakterini oluştur, aynı yüzü koru ve içerik üretimini tek merkezden yönet.</p></div>
+              <div className="welcome-orb"><Logo /><span className="orbit o1" /><span className="orbit o2" /></div>
+            </section>
+            <section className="quick-grid">
+              {tools.slice(0, 4).map(t => <button key={t.id} onClick={() => openTool(t.id as StudioTool)}><span className="tool-icon">{t.icon}</span><div><strong>{t.title}</strong><small>{t.text}</small></div><b>↗</b></button>)}
+            </section>
+            <section className="dashboard-grid">
+              <div className="panel">
+                <div className="panel-title"><div><span>SON ÜRETİMLER</span><h3>Kaldığın yerden devam et</h3></div><button onClick={() => setView("gallery")}>Tümünü gör</button></div>
+                <div className="creation-strip">{creations.slice(0, 4).map(c => <article key={c.id} onClick={() => setView("gallery")} className={`creation ${c.color}`}><div className="fake-portrait"><span>H</span></div><em>{c.type}</em><strong>{c.title}</strong><small>{c.time}</small></article>)}</div>
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section comparison" id="results">
-        <div className="shell split">
-          <div className="sticky-copy">
-            <div className="kicker">Why The AI Model Lab</div>
-            <h2>Running an OFM operation used to cost a fortune. <span>Now it costs pennies.</span></h2>
-            <p>One simple workspace replaces the stack of subscriptions that slows your production down.</p>
+              <aside className="usage-card"><span>AYLIK KULLANIM</span><h3>{credits.toLocaleString("tr-TR")}</h3><p>kalan kredi</p><div className="meter"><i style={{ width: `${Math.min(100, credits / 120)}%` }} /></div><small>Creator planı · 12.000 kredi</small><button onClick={() => setView("pricing")}>Paketi yükselt</button></aside>
+            </section>
           </div>
-          <div className="stack-card">
-            {stack.map(([name, sub, price]) => (
-              <div className="stack-row" key={name}>
-                <div className="app-icon">{name.slice(0, 1)}</div>
-                <div><strong>{name}</strong><span>{sub}</span></div>
-                <b>{price}</b>
-              </div>
-            ))}
-            <div className="total">
-              <span>Total if bought separately</span>
-              <strong>~$745/mo</strong>
+        )}
+
+        {view === "studio" && (
+          <div className="page studio-page">
+            <div className="studio-tabs"><button className="active">{tools.find(t => t.id === tool)?.title}</button><button onClick={() => openTool("image")}>＋</button></div>
+            <div className="studio-layout">
+              <section className="config-panel">
+                <div className="field"><label>Araç</label><select value={tool} onChange={e => openTool(e.target.value as StudioTool)}>{tools.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select></div>
+                <div className="field"><label>Model</label><select value={model} onChange={e => setModel(e.target.value)}>{models[tool].map(m => <option key={m}>{m}</option>)}</select></div>
+                <div className="field"><label>Referanslar <span>{files.length}/8</span></label><label className="upload"><input type="file" multiple accept="image/*,video/*" onChange={e => handleFiles(e.target.files)} /><b>＋</b><span>{files.length ? files.join(", ") : tool === "motion" ? "Karakter görseli ve hareket videosu ekle" : "Referans dosyaları ekle"}</span></label></div>
+                {!["motion", "tryon", "swap", "upscale"].includes(tool) && <div className="field prompt-field"><label>Prompt</label><textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder={tool === "clone" ? "Görsel yüklendiğinde prompt burada oluşur." : "Sahneyi, karakteri, ışığı ve kamera açısını anlat…"} /><button className="enhance" disabled={busy} onClick={enhancePrompt}>✦ {busy ? "Geliştiriliyor…" : "Hatun AI ile geliştir"}</button></div>}
+                <div className="inline-options"><label>Oran<select><option>9:16</option><option>1:1</option><option>16:9</option><option>3:4</option></select></label><label>Kalite<select><option>2K</option><option>1K</option><option>HD</option></select></label>{tool === "video" && <label>Süre<select><option>8 sn</option><option>5 sn</option><option>10 sn</option></select></label>}</div>
+                <div className="estimate"><div><span>Tahmini maliyet</span><strong>{costs[tool]} kredi</strong></div><button onClick={generate} disabled={busy}>{busy ? "İşleniyor…" : tool === "clone" ? "Promptu klonla" : "Üret"} <span>↗</span></button></div>
+                {notice && <div className="notice">{notice}</div>}
+              </section>
+              <section className="results-panel">
+                <div className="panel-title"><div><span>CREATIONS</span><h3>Üretimler</h3></div><div className="mini-filters"><button className="active">Tümü</button><button>Görsel</button><button>Video</button></div></div>
+                <div className="result-grid">{creations.slice(0, 6).map(c => <article className={`result-card ${c.color}`} key={c.id}><div className="fake-portrait"><span>H</span></div><div><em>{c.type}</em><strong>{c.title}</strong><small>{c.time}</small></div></article>)}</div>
+              </section>
             </div>
-            <p>Here you get <b>everything</b> in a single plan — for just a fraction of that.</p>
           </div>
-        </div>
-      </section>
+        )}
 
-      <section className="section shell" id="pricing">
-        <div className="center-head">
-          <div className="kicker">Pricing</div>
-          <h2>Choose the production capacity behind your offer.</h2>
-          <p>Start small, prove your model, then scale when output becomes the limit.</p>
-        </div>
-        <div className="plans">
-          {plans.map((plan) => (
-            <article className={`plan ${plan.popular ? "popular" : ""}`} key={plan.name}>
-              {plan.popular && <span className="popular-label">Most popular</span>}
-              <h3>{plan.name}</h3>
-              <p>{plan.desc}</p>
-              <div className="price"><strong>{plan.price}</strong><span>/ month</span></div>
-              <div className="credits">{plan.credits}</div>
-              <a href="#cta" className={`button ${plan.popular ? "primary" : "ghost"}`}>Choose {plan.name} <Arrow /></a>
-              <ul>{plan.features.map((f) => <li key={f}><Check />{f}</li>)}</ul>
-            </article>
-          ))}
-        </div>
-        <div className="reassurance"><span>✓ No cancellation fee</span><span>⌁ Secure payment</span><span>↻ Credits renew monthly</span></div>
-      </section>
-
-      <section className="section audience">
-        <div className="shell">
-          <div className="section-head">
-            <div><div className="kicker">Who it&apos;s for</div><h2>From your first model to an agency with dozens of accounts.</h2></div>
+        {view === "tools" && (
+          <div className="page">
+            <div className="page-intro"><span>ÜRETİM MERKEZİ</span><h2>Tek platform.<br />Tüm yaratıcı araçlar.</h2><p>Hatun&apos;un güvenli üretim araçlarıyla fikirden yayına kadar bütün süreci yönet.</p></div>
+            <div className="all-tools">{tools.map(t => <button key={t.id} onClick={() => openTool(t.id as StudioTool)}><span>{t.icon}</span><em>{t.type}</em><h3>{t.title}</h3><p>{t.text}</p><b>Aracı aç ↗</b></button>)}</div>
           </div>
-          <div className="audience-grid">
-            {audiences.map(([n, title, text]) => <article key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><Arrow /></article>)}
+        )}
+
+        {view === "prompts" && (
+          <div className="page">
+            <div className="page-intro row"><div><span>İLHAM KÜTÜPHANESİ</span><h2>Hazır promptlar</h2><p>İçeriğine göre düzenle, tek tıkla stüdyoya taşı.</p></div><input className="library-search" placeholder="Promptlarda ara…" value={search} onChange={e => setSearch(e.target.value)} /></div>
+            <div className="prompt-grid">{filteredPrompts.map(([title, text], i) => <article key={title}><div className={`prompt-cover pc${i + 1}`}><span>HATUN / {String(i + 1).padStart(2, "0")}</span></div><h3>{title}</h3><p>{text}</p><button onClick={() => { setPrompt(text); openTool("image"); }}>Stüdyoda kullan ↗</button></article>)}</div>
           </div>
-        </div>
-      </section>
+        )}
 
-      <section className="section shell testimonials">
-        <div className="center-head"><div className="kicker">What people say</div><h2>Real operators. Real accounts.</h2></div>
-        <div className="quotes">
-          {testimonials.map(([initials, name, handle, quote]) => (
-            <article key={name}><div className="quote-mark">“</div><p>{quote}</p><div className="person"><span>{initials}</span><div><strong>{name}</strong><small>{handle}</small></div></div></article>
-          ))}
-        </div>
-      </section>
+        {view === "gallery" && (
+          <div className="page">
+            <div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini ara, filtrele ve yeniden kullan.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(f => <button className={galleryFilter === f ? "active" : ""} key={f} onClick={() => setGalleryFilter(f)}>{f}</button>)}</div></div>
+            <div className="gallery-grid">{filteredCreations.map(c => <article key={c.id} className={`gallery-card ${c.color}`}><div className="fake-portrait"><span>H</span></div><div><em>{c.type}</em><h3>{c.title}</h3><small>{c.time}</small><button>•••</button></div></article>)}</div>
+          </div>
+        )}
 
-      <section className="section shell faq" id="faq">
-        <div className="faq-intro"><div className="kicker">Questions</div><h2>Frequently Asked Questions</h2><p>Everything you need to know before getting started.</p></div>
-        <div className="faq-list">
-          {faqs.map(([q, a], i) => (
-            <article className={openFaq === i ? "faq-item open" : "faq-item"} key={q}>
-              <button onClick={() => setOpenFaq(openFaq === i ? -1 : i)} aria-expanded={openFaq === i}><span>{q}</span><b>{openFaq === i ? "−" : "+"}</b></button>
-              <div className="answer"><p>{a}</p></div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="cta shell" id="cta">
-        <div className="orb orb-two" />
-        <div className="avatars"><span>LF</span><span>MC</span><span>RS</span><span>CO</span><b>+2K</b></div>
-        <h2>Ready to launch your first<br />AI model on Fanvue?</h2>
-        <p>Join the operators and agencies already scaling with a 100% consistent face.</p>
-        <a className="button primary" href="#pricing">Start Now <Arrow /></a>
-        <small>2-minute setup · Cancel anytime</small>
-      </section>
-
-      <footer>
-        <div className="shell footer-grid">
-          <div className="footer-brand"><img src="/assets/logo.png" alt="" /><strong>The AI Model Lab</strong><p>Create professional AI influencers, videos, and images.</p></div>
-          <div><h4>Product</h4><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#results">Results</a><a href="#faq">FAQ</a></div>
-          <div><h4>Company</h4><a href="#">About</a><a href="#">Contact</a></div>
-          <div><h4>Legal</h4><a href="#">Terms of Service</a><a href="#">Privacy Policy</a></div>
-        </div>
-        <div className="shell copyright">© 2026 The AI Model Lab. All rights reserved.<span>Instagram · TikTok</span></div>
-      </footer>
-
-      <a className="support" href="https://wa.me/5511943735978" aria-label="Support via WhatsApp">↗</a>
-    </main>
+        {view === "pricing" && (
+          <div className="page pricing-page">
+            <div className="page-intro center"><span>ESNEK KAPASİTE</span><h2>Üretim hacmine göre büyü.</h2><p>İstediğin zaman yükselt, iptal et veya ek kredi al.</p></div>
+            <div className="pricing-grid">{plans.map(p => <article key={p.name} className={p.popular ? "popular" : ""}>{p.popular && <em>EN POPÜLER</em>}<h3>{p.name}</h3><p>{p.note}</p><div className="plan-price"><strong>{p.price}</strong><span>/ay</span></div><div className="plan-credits">{p.credits} kredi / ay</div><ul><li>✓ Hızlı üretim kuyruğu</li><li>✓ Ticari kullanım</li><li>✓ 180 gün galeri</li><li>✓ Güvenli yetişkin doğrulaması</li></ul><button disabled={p.current}>{p.current ? "Mevcut plan" : "Paketi seç"}</button></article>)}</div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
