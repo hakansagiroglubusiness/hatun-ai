@@ -343,3 +343,16 @@ body{background-image:radial-gradient(circle at 76% -8%,rgba(217,255,79,.07),tra
   .welcome{padding:38px 26px}
   .welcome h2{font-size:46px}
 }
+
+/* Gallery quick actions */
+.gallery-card>div:last-child{padding-bottom:15px}
+.gallery-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:13px}
+.gallery-actions a,.gallery-actions button{
+  position:static;width:34px;height:34px;margin:0;padding:0;display:grid;place-items:center;
+  border:1px solid #363934;border-radius:8px;background:#191a1a;color:#d9ff4f;
+  font-size:16px;font-weight:700;text-decoration:none;line-height:1;
+  transition:background .18s,border-color .18s,color .18s,transform .18s;
+}
+.gallery-actions a:hover,.gallery-actions button:hover{border-color:#68743a;background:#25291b;transform:translateY(-1px)}
+.gallery-actions button.delete{color:#ff7d87}
+.gallery-actions button.delete:hover{border-color:#754048;background:#2b191c;color:#ff9ca4}

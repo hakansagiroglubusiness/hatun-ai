@@ -17,6 +17,7 @@ export async function GET() {
         id: item.id,
         type: item.kind === "video" ? "Video" : "Görsel",
         tool: item.tool,
+        prompt: item.prompt,
         title: item.prompt?.slice(0, 54) || "Yeni üretim",
         status: item.status,
         createdAt: item.createdAt,

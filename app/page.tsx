@@ -11,6 +11,7 @@ type Creation = {
   title: string;
   status: string;
   assetUrl?: string | null;
+  prompt?: string | null;
   error?: string | null;
   createdAt?: string | number | Date;
   color?: string;
@@ -269,6 +270,26 @@ export default function Home() {
     }
   };
 
+  const editCreation = (item: Creation) => {
+    const nextTool: StudioTool = item.type === "Video" ? "video" : "image";
+    openTool(nextTool);
+    setPrompt(item.prompt || item.title);
+    setNotice("Üretimin promptu düzenleme için stüdyoya taşındı.");
+  };
+
+  const deleteCreation = async (item: Creation) => {
+    if (!window.confirm("Bu üretim ve dosyası kalıcı olarak silinsin mi?")) return;
+    try {
+      const response = await fetch(`/api/generations/${item.id}`, { method: "DELETE" });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Üretim silinemedi.");
+      setCreations(previous => previous.filter(creation => creation.id !== item.id));
+      setNotice("Üretim galeriden silindi.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Üretim silinemedi.");
+    }
+  };
+
   const initials = displayName.split(/\s+/).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "H";
 
   return (
@@ -348,7 +369,7 @@ export default function Home() {
 
         {selectedPrompt && <div className="prompt-modal" role="dialog" aria-modal="true" aria-label={selectedPrompt.title}><button className="modal-backdrop" aria-label="Kapat" onClick={() => setSelectedPrompt(null)} /><div className="prompt-modal-card"><button className="modal-close" onClick={() => setSelectedPrompt(null)} aria-label="Kapat">×</button><button className="prompt-copy-icon" title="Promptu kopyala" aria-label="Promptu kopyala" onClick={() => { void navigator.clipboard.writeText(selectedPrompt.prompt); setCopiedPromptId(selectedPrompt.id); window.setTimeout(() => setCopiedPromptId(null), 1600); }}>{copiedPromptId === selectedPrompt.id ? "✓" : "⧉"}</button><img src={selectedPrompt.previewUrl} alt={selectedPrompt.title} /><div className="prompt-modal-content"><span>{selectedPrompt.format.toUpperCase()} · {selectedPrompt.category}</span><h3>{selectedPrompt.title}</h3><pre>{selectedPrompt.prompt}</pre><div className="prompt-modal-actions"><button onClick={() => { setPrompt(selectedPrompt.prompt); setSelectedPrompt(null); openTool("image"); }}>Stüdyoda kullan ↗</button></div></div></div></div>}
 
-        {view === "gallery" && <div className="page"><div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini filtrele, görüntüle ve indir.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(filter => <button className={galleryFilter === filter ? "active" : ""} key={filter} onClick={() => setGalleryFilter(filter)}>{filter}</button>)}</div></div><div className="gallery-grid">{filteredCreations.map((item, index) => <article key={item.id} className={`gallery-card ${["rose", "violet", "amber", "cyan"][index % 4]}`}>{item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} controls /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}<div><em>{item.type} · {statusLabel(item.status)}</em><h3>{item.title}</h3><small>{relativeTime(item.createdAt)}</small>{item.assetUrl && <a href={item.assetUrl} download>İndir ↗</a>}</div></article>)}</div></div>}
+        {view === "gallery" && <div className="page"><div className="page-intro row"><div><span>İÇERİK ARŞİVİ</span><h2>Galeri</h2><p>Tüm üretimlerini filtrele, görüntüle ve indir.</p></div><div className="gallery-filters">{["Tümü", "Görsel", "Video"].map(filter => <button className={galleryFilter === filter ? "active" : ""} key={filter} onClick={() => setGalleryFilter(filter)}>{filter}</button>)}</div></div><div className="gallery-grid">{filteredCreations.map((item, index) => <article key={item.id} className={`gallery-card ${["rose", "violet", "amber", "cyan"][index % 4]}`}>{item.assetUrl ? item.type === "Video" ? <video src={item.assetUrl} controls /> : <img src={item.assetUrl} alt={item.title} /> : <div className="fake-portrait"><span>{item.status === "failed" ? "!" : "H"}</span></div>}<div><em>{item.type} · {statusLabel(item.status)}</em><h3>{item.title}</h3><small>{relativeTime(item.createdAt)}</small><div className="gallery-actions">{item.assetUrl && <a href={`${item.assetUrl}?download=1`} download aria-label="İndir" title="İndir">↓</a>}<button onClick={() => editCreation(item)} aria-label="Düzenle" title="Düzenle">✎</button><button className="delete" onClick={() => void deleteCreation(item)} aria-label="Sil" title="Sil">⌫</button></div></div></article>)}</div></div>}
 
         {view === "pricing" && <div className="page pricing-page"><div className="page-intro center"><span>ESNEK KAPASİTE</span><h2>Üretim hacmine göre büyü.</h2><p>İstediğin zaman yükselt, iptal et veya ek kredi al.</p>{notice && <div className="notice">{notice}</div>}</div><div className="pricing-grid">{plans.map(plan => <article key={plan.name} className={plan.popular ? "popular" : ""}>{plan.popular && <em>EN POPÜLER</em>}<h3>{plan.name}</h3><p>{plan.note}</p><div className="plan-price"><strong>{plan.price}</strong><span>/ay</span></div><div className="plan-credits">{plan.credits} kredi / ay</div><ul><li>✓ Hızlı üretim kuyruğu</li><li>✓ Ticari kullanım</li><li>✓ 180 gün galeri</li><li>✓ Güvenli yetişkin doğrulaması</li></ul><button disabled={busy || plan.current} onClick={() => void startCheckout(plan.id)}>{plan.current ? "Mevcut plan" : "Paketi seç"}</button></article>)}</div><button className="extra-credit" disabled={busy} onClick={() => void startCheckout("credits")}>10.000 ek kredi satın al</button></div>}
       </main>

@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
@@ -50,6 +51,30 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     const status = error instanceof ApiError ? error.status : 500;
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Üretim durumu alınamadı." },
+      { status },
+    );
+  }
+}
+
+export async function DELETE(_: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    const user = await requireApiUser();
+    const { id } = await context.params;
+    const db = getDb();
+    const item = await db.query.generations.findFirst({
+      where: sql`${generations.id} = ${id} AND ${generations.userId} = ${user.id}`,
+    });
+    if (!item) throw new ApiError(404, "Üretim bulunamadı.");
+
+    if (item.assetKey && env.MEDIA) await env.MEDIA.delete(item.assetKey);
+    if (item.thumbnailKey && env.MEDIA) await env.MEDIA.delete(item.thumbnailKey);
+    await db.delete(generations).where(sql`${generations.id} = ${id} AND ${generations.userId} = ${user.id}`);
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    const status = error instanceof ApiError ? error.status : 500;
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Üretim silinemedi." },
       { status },
     );
   }

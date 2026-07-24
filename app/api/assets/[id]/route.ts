@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 import { generations } from "@/db/schema";
 import { ApiError, requireApiUser } from "@/lib/hatun-db";
 
-export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireApiUser();
     const { id } = await context.params;
@@ -19,7 +19,8 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set("Cache-Control", "private, max-age=3600");
-    headers.set("Content-Disposition", `inline; filename="${item.id}.${item.kind === "video" ? "mp4" : "webp"}"`);
+    const disposition = new URL(request.url).searchParams.get("download") === "1" ? "attachment" : "inline";
+    headers.set("Content-Disposition", `${disposition}; filename="hatun-${item.id}.${item.kind === "video" ? "mp4" : "webp"}"`);
     return new Response(object.body, { headers });
   } catch (error) {
     const status = error instanceof ApiError ? error.status : 500;
