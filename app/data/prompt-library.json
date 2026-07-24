@@ -3112,5 +3112,59 @@
     "prompt": "{\"meta\":{\"aspect_ratio\":\"9:16\",\"quality\":\"ultra_photorealistic\",\"resolution\":\"8k\",\"camera\":\"iPhone 15 Pro Max front camera\",\"lens\":\"24mm wide-angle\",\"style\":\"iPhone camera realism, not studio, non-professional, visible natural texture\"},\"character_lock\":{\"identity_source\":\"\",\"face_identity\":[\"same person as in the reference image\",\"same facial proportions, same jawline and bone structure\",\"same nose, lips, eyes, and facial features\",\"natural asymmetry maintained\",\"NO facial alteration\",\"NO face swap errors\",\"NO generic AI face\"],\"appearance_rules\":[\"hair, skin tone, skin texture, facial imperfections, facial features, and overall appearance must come ONLY from the reference image\",\"DO NOT alter skin color or features\",\"include tattoos, piercings, or marks ONLY if they exist in the reference\"]},\"scene\":{\"location\":\"tropical beach by the water\",\"environment\":[\"shallow sea with small waves breaking on the sand\",\"luxurious bungalows with thatched roofs and dense palm trees in the background\",\"sunny, paradisiacal, and clean environment\"],\"atmosphere\":\"luxurious tropical vacation, relaxing, resort vibe in the late afternoon\"},\"lighting\":{\"type\":\"natural golden hour light\",\"main_light\":\"backlight from the setting sun in the background, creating a soft rim light on the model\",\"fill_light\":\"warm, diffused light reflected by the sand and sky illuminating the front\",\"contrast\":\"soft contrast, natural shadows not too pronounced on the face\",\"avoid\":[\"studio lighting\",\"artificial ring light\",\"professional appearance\",\"exaggerated artificial warm/orange tones\",\"flash\"]},\"camera_perspective\":{\"pov\":\"photo taken by a third party (or tripod) at waist height\",\"angle\":\"frontal, straight plane\",\"distance\":\"full body, showing from head to toe in the water\",\"phone_visibility\":\"the phone does not reflect in the mirror but is held in the model's hand\"},\"subject\":{\"gender\":\"female\",\"age\":\"adult (21+)\",\"vibe\":\"elegant beach, luxurious, confident\",\"expression\":{\"eyes\":\"looking directly at the camera, covered by dark sunglasses\",\"mouth\":\"relaxed lips, neutral and serene expression\",\"emotion\":\"calm, confident\"},\"pose\":{\"position\":\"walking forward towards the camera\",\"support\":\"bare feet stepping on wet sand and shallow sea water\",\"hand\":\"right hand raised touching and adjusting sunglasses, left hand down holding a black smartphone\"},\"clothing\":{\"top\":{\"type\":\"white bandeau bikini top and a long open white beach cover-up (chemise)\",\"fit\":\"bikini snug to the body; beach cover-up loose, light, and flowing\",\"details\":\"beach cover-up fabric is slightly translucent with rolled-up long sleeves\"},\"extra\":[\"white bikini bottoms with thin side ties\",\"dark cat-eye/square sunglasses\",\"navel piercing\",\"delicate bracelet on the right wrist\"]}},\"image_quality\":{\"focus\":\"sharp focus on the model in the foreground, background with slight natural optical blur\",\"grain\":\"visible noise in low light\",\"sharpness\":\"NOT extremely sharp, more lo-fi\",\"realism\":\"looks like a real iPhone selfie/photo posted online\",\"sensor_artifacts\":\"slight sun flare at the top of the image, subtle photographic texture noise\",\"lens_distortion\":\"slight 24mm barrel distortion, slightly stretching the edges\",\"post_processing\":\"typical iOS algorithm artificial sharpening (oversharpening)\"}}",
     "sourceUrl": "https://www.theaimodelab.com/en/prompt-library",
     "title": "JSON Prompt 346"
+  },
+  {
+    "id": "hearmeman-after-shower-01",
+    "title": "Towel Aftershower Adi",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "Close mirror selfie framing head and upper torso at eye-level, phone held off-center with a slight handheld tilt at close-friend distance, fresh out of the shower. A warm-toned bathroom behind her with a lightly fogged mirror edge, a wood-framed vanity, a small lilac orchid in a pot and rolled towels on a shelf adding depth. A woman wrapped in a soft white towel tucked snug above the chest. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. A lilac satin claw clip holding a few strands and dainty gold drop earrings adding a pop of color. Relaxed natural half-smile, eyes meeting the mirror softly with one hand adjusting the towel, caught in an unguarded calm moment. Warm vanity bulbs glow from either side of the mirror, casting gentle symmetric shadows and soft warm reflections on the fogged glass. no readable text, no signs, no logos, no captions, no watermarks. Natural skin texture, realistic hands and fingers, believable fabric folds in the towel, accurate shadows, undistorted architecture, no waxy skin, no extra fingers. shot on iPhone 15 Pro Max main 1x camera, 24mm equivalent wide lens, ƒ/1.78 aperture, realistic smartphone photography, natural iPhone HDR, sharp foreground and background detail, mild depth of field, subtle background separation only from close focus, natural skin texture, realistic phone-camera color science, casual handheld framing",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/8946a9d8cb.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
+  },
+  {
+    "id": "hearmeman-after-shower-02",
+    "title": "Fresh Shower Wethair Dana",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "A close mirror selfie of one woman just after a shower. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. A plush white cotton towel wrapped around her, with water droplets beading on her shoulders. Soft diffused bathroom light fills the frame as she holds a calm, direct gaze into the mirror. Accessories: none (implausible for a fresh-out-of-shower towel shot). shot on iPhone 15 Pro Max main 1x camera, 24mm equivalent wide lens, ƒ/1.78 aperture, realistic smartphone photography, natural iPhone HDR, sharp foreground and background detail, mild depth of field, subtle background separation only from close focus, natural skin texture, realistic phone-camera color science, casual handheld framing",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/b356293f7a.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
+  },
+  {
+    "id": "hearmeman-after-shower-03",
+    "title": "Towel Head Skincare Adi",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "A bright bathroom selfie with a woman. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. Her hair is wrapped up in a crisp white cotton towel turban and a plush ivory waffle-knit cotton robe worn loosely off one shoulder, fingertips patting in moisturizer at the cheek. Accessories kept minimal for a clean post-shower look: thin gold huggie hoop earrings and a delicate gold chain bracelet. Content little closed-lip smile, calm self-care mood. Bright clean vanity light, mirrored counter behind. shot on iPhone 15 Pro Max main 1x camera, 24mm equivalent wide lens, ƒ/1.78 aperture, realistic smartphone photography, natural iPhone HDR, sharp foreground and background detail, mild depth of field, subtle background separation only from close focus, natural skin texture, realistic phone-camera color science, casual handheld framing",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/0947c37cf1.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
+  },
+  {
+    "id": "hearmeman-after-shower-04",
+    "title": "Hair Tied Spa Hila",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "A serene at-home spa selfie of a woman. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. Soft white robe, a sheet mask half on, cozy warm bathroom lighting, eyes relaxed, calm expression.",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/f71e365781.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
+  },
+  {
+    "id": "hearmeman-after-shower-05",
+    "title": "Towel Aftershower Dana",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "Close mirror selfie framing head and upper torso at eye-level, phone held off-center with a slight handheld tilt at close-friend distance, fresh out of the shower. A warm-toned bathroom behind her with a lightly fogged mirror edge, a wood-framed vanity, a small lilac orchid in a pot and rolled towels on a shelf adding depth. A woman wrapped in a soft white towel tucked snug above the chest. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. A lilac satin claw clip holding a few strands and dainty gold drop earrings adding a pop of color. Relaxed natural half-smile, eyes meeting the mirror softly with one hand adjusting the towel, caught in an unguarded calm moment. Warm vanity bulbs glow from either side of the mirror, casting gentle symmetric shadows and soft warm reflections on the fogged glass. no readable text, no signs, no logos, no captions, no watermarks. Natural skin texture, realistic hands and fingers, believable fabric folds in the towel, accurate shadows, undistorted architecture, no waxy skin, no extra fingers. shot on iPhone 15 Pro Max main 1x camera, 24mm equivalent wide lens, ƒ/1.78 aperture, realistic smartphone photography, natural iPhone HDR, sharp foreground and background detail, mild depth of field, subtle background separation only from close focus, natural skin texture, realistic phone-camera color science, casual handheld framing",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/9834e70f82.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
+  },
+  {
+    "id": "hearmeman-after-shower-06",
+    "title": "Fresh Shower Wethair Gal",
+    "category": "After Shower",
+    "format": "text",
+    "prompt": "A close mirror selfie of one woman just after a shower. Preserve the character identity from the reference image, keeping their exact hair color, hairstyle, eye color, skin tone, face shape, and body shape. A plush white cotton towel wrapped around her, with water droplets beading on her shoulders. Soft diffused bathroom light fills the frame as she holds a calm, direct gaze into the mirror. Accessories: none (implausible for a fresh-out-of-shower towel shot). shot on iPhone 15 Pro Max main 1x camera, 24mm equivalent wide lens, ƒ/1.78 aperture, realistic smartphone photography, natural iPhone HDR, sharp foreground and background detail, mild depth of field, subtle background separation only from close focus, natural skin texture, realistic phone-camera color science, casual handheld framing",
+    "previewUrl": "https://cdn.hearmemanai.com/catalog/f7a6de77c5.jpg",
+    "sourceUrl": "https://prompt.hearmemanai.com/packs/after-shower"
   }
 ]
