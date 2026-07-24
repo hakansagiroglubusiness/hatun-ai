@@ -5,6 +5,7 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://hatun-ai.hakansagiroglu-busin.chatgpt.site"),
   title: "Hatun — AI Creator Studio",
   description: "Tutarlı AI karakterleri, görselleri ve videoları tek üretim merkezinde oluştur.",
   icons: { icon: "/og-hatun.png", shortcut: "/og-hatun.png" },

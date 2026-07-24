@@ -1,98 +1,55 @@
-# vinext-starter
+# Hatun — AI Creator Studio
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Hatun; kullanıcıların güvenli ve rızaya dayalı AI görsel/video içerikleri üretmesini, arşivlemesini ve kredi tabanlı aboneliklerle yönetmesini sağlayan Creator Studio ürünüdür.
 
-## Prerequisites
+## Ürün yetenekleri
 
-- Node.js `>=22.13.0`
+- OpenAI GPT Image ile gerçek görsel üretimi
+- Sora ile asenkron video üretimi ve otomatik durum takibi
+- Referans dosyası yükleme, prompt klonlama, upscale ve izinli görsel düzenleme
+- D1 üzerinde kullanıcı, üretim, abonelik ve kredi defteri
+- R2 üzerinde yüklenen ve üretilen medya
+- Stripe Checkout, Billing Portal ve webhook altyapısı
+- Yetişkinlik/açık rıza onayı ve OpenAI moderasyonu
+- Kullanıcı galerisi ve yönetim paneli
 
-## Quick Start
+## Yerel geliştirme
+
+Gereksinim: Node.js `>=22.13.0`.
 
 ```bash
-npm install
+npm ci
+npm run db:generate
 npm run dev
+```
+
+Üretim doğrulaması:
+
+```bash
 npm run build
+npm test
+npm run lint
+npx tsc --noEmit
 ```
 
-This starter does not use `wrangler.jsonc`.
+## Ortam değişkenleri
 
-## Included Shape
+Gerekli değişkenler `.env.example` dosyasında listelenir. Gerçek anahtarları yalnızca git tarafından yok sayılan `.env.local` dosyasında veya Sites runtime ayarlarında saklayın.
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+- `OPENAI_API_KEY`: prompt, görsel, video ve moderasyon
+- `HATUN_ADMIN_EMAIL`: yönetim paneline erişecek e-posta
+- `STRIPE_SECRET_KEY`: Stripe sunucu anahtarı
+- `STRIPE_WEBHOOK_SECRET`: webhook imza doğrulaması
+- `STRIPE_PRICE_*`: paket ve ek kredi fiyat kimlikleri
 
-## Workspace Auth Headers
+## Veri ve depolama
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+`.openai/hosting.json` içindeki `DB` ve `ASSETS` mantıksal bağları Sites tarafından D1 ve R2 kaynaklarına bağlanır. Şema değişikliklerinden sonra `npm run db:generate` çalıştırılmalı ve oluşan `drizzle/*.sql` dosyaları kaydedilmelidir.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Güvenlik sınırları
 
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+- Kredi bakiyesi yalnızca sunucuda değiştirilir.
+- Dosya ve üretim erişimi kullanıcı sahipliğiyle kontrol edilir.
+- Yüz değiştirme ve sanal giydirme açık rıza onayı olmadan başlatılmaz.
+- Promptlar üretimden önce moderasyondan geçer.
+- API ve ödeme anahtarları kaynak koda yazılmaz.
