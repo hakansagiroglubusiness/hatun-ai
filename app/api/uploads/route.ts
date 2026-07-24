@@ -13,7 +13,7 @@ const ALLOWED_TYPES = new Set([
 export async function POST(request: Request) {
   try {
     const user = await requireApiUser();
-    if (!env.ASSETS) throw new ApiError(503, "Dosya depolama henüz bağlı değil.");
+    if (!env.MEDIA) throw new ApiError(503, "Dosya depolama henüz bağlı değil.");
     const form = await request.formData();
     const files = form.getAll("files").filter((value): value is File => value instanceof File);
     const purpose = String(form.get("purpose") || "reference");
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       const id = crypto.randomUUID();
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const objectKey = `users/${user.id}/uploads/${id}-${safeName}`;
-      await env.ASSETS.put(objectKey, await file.arrayBuffer(), {
+      await env.MEDIA.put(objectKey, await file.arrayBuffer(), {
         httpMetadata: { contentType: file.type },
       });
       await db.insert(uploads).values({

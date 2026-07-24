@@ -30,7 +30,14 @@ test("ships persistent product routes and storage schema", async () => {
   await Promise.all(required.map(path => access(new URL(path, root))));
   const hosting = JSON.parse(await readFile(new URL(".openai/hosting.json", root), "utf8"));
   assert.equal(hosting.d1, "DB");
-  assert.equal(hosting.r2, "ASSETS");
+  assert.equal(hosting.r2, "MEDIA");
+  const storageSources = await Promise.all([
+    readFile(new URL("lib/hatun-db.ts", root), "utf8"),
+    readFile(new URL("app/api/uploads/route.ts", root), "utf8"),
+    readFile(new URL("app/api/assets/[id]/route.ts", root), "utf8"),
+  ]);
+  assert.match(storageSources.join("\n"), /env\.MEDIA\.(put|get)/);
+  assert.doesNotMatch(storageSources.join("\n"), /env\.ASSETS\.(put|get)/);
 });
 
 test("contains clean Turkish copy and no mock generation timer", async () => {

@@ -107,8 +107,8 @@ export async function getOwnedUpload(userId: string, uploadId: string) {
 }
 
 export async function storeBytes(key: string, bytes: ArrayBuffer | Uint8Array, contentType: string) {
-  if (!env.ASSETS) throw new ApiError(503, "Dosya depolama henüz bağlı değil.");
-  await env.ASSETS.put(key, bytes, { httpMetadata: { contentType } });
+  if (!env.MEDIA) throw new ApiError(503, "Dosya depolama henüz bağlı değil.");
+  await env.MEDIA.put(key, bytes, { httpMetadata: { contentType } });
 }
 
 export class ApiError extends Error {

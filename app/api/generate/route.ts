@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     for (const uploadId of uploadIds) {
       const upload = await getOwnedUpload(user.id, uploadId);
       if (!upload) throw new ApiError(404, "Referans dosyası bulunamadı.");
-      const object = await env.ASSETS?.get(upload.objectKey);
+      const object = await env.MEDIA?.get(upload.objectKey);
       if (!object) throw new ApiError(404, "Referans dosyası depolamada bulunamadı.");
       referenceFiles.push(new File([await object.arrayBuffer()], upload.filename, { type: upload.contentType }));
     }

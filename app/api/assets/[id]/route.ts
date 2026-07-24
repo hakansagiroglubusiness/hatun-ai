@@ -13,8 +13,8 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
       where: sql`${generations.id} = ${id} AND ${generations.userId} = ${user.id}`,
     });
     if (!item?.assetKey) throw new ApiError(404, "Dosya bulunamadı.");
-    if (!env.ASSETS) throw new ApiError(503, "Dosya depolama bağlı değil.");
-    const object = await env.ASSETS.get(item.assetKey);
+    if (!env.MEDIA) throw new ApiError(503, "Dosya depolama bağlı değil.");
+    const object = await env.MEDIA.get(item.assetKey);
     if (!object) throw new ApiError(404, "Dosya bulunamadı.");
     const headers = new Headers();
     object.writeHttpMetadata(headers);
