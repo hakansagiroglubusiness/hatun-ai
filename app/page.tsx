@@ -27,6 +27,8 @@ type GenerateResponse = {
   credits: number;
   generation: Creation;
   clonedPrompt?: string;
+  safeFallbackApplied?: boolean;
+  safePrompt?: string;
 };
 type LibraryPrompt = {
   id: string;
@@ -233,7 +235,13 @@ export default function Home() {
       setCredits(data.credits);
       setCreations(prev => [{ ...data.generation, createdAt: Date.now(), color: "rose" }, ...prev]);
       if (data.clonedPrompt) setPrompt(data.clonedPrompt);
-      setNotice(data.generation.status === "completed" ? "Üretim tamamlandı." : "Üretim kuyruğa alındı; durum otomatik güncellenecek.");
+      setNotice(
+        data.safeFallbackApplied
+          ? "İlk istek güvenlik kontrolüne takıldı. Sahne ve kompozisyon korunarak daha güvenli bir promptla üretildi."
+          : data.generation.status === "completed"
+            ? "Üretim tamamlandı."
+            : "Üretim kuyruğa alındı; durum otomatik güncellenecek.",
+      );
       if (data.generation.status === "completed") await loadAccount();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Üretim tamamlanamadı.");

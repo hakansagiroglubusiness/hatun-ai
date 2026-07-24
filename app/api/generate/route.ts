@@ -13,7 +13,14 @@ import {
   type ToolId,
 } from "@/lib/hatun-db";
 import { withReferenceIdentityLock } from "@/lib/identity-lock";
-import { createVideo, describeImage, editImage, generateImage, IMAGE_MODEL } from "@/lib/openai";
+import {
+  createVideo,
+  describeImage,
+  editImage,
+  generateImage,
+  IMAGE_MODEL,
+  type ImageResult,
+} from "@/lib/openai";
 
 const VALID_TOOLS = new Set(Object.keys(TOOL_COSTS));
 
@@ -102,7 +109,7 @@ export async function POST(request: Request) {
     }
 
     if (["image", "tryon", "swap", "upscale"].includes(tool)) {
-      let result: { bytes: Uint8Array; contentType: string };
+      let result: ImageResult;
       if (tool === "image") {
         if (imageReferenceFiles.length) {
           const referencePrompt = [
@@ -131,12 +138,21 @@ export async function POST(request: Request) {
       await db.update(generations).set({
         status: "completed",
         assetKey,
+        metadataJson: JSON.stringify({
+          ratio: body.ratio || "9:16",
+          quality: body.quality || "2K",
+          uploadIds,
+          safeFallbackApplied: result.safeFallbackApplied === true,
+          safePrompt: result.safePrompt,
+        }),
         updatedAt: new Date(),
       }).where((await import("drizzle-orm")).eq(generations.id, id));
       reservation = null;
       return NextResponse.json({
         generation: { id, type: "Görsel", status: "completed", assetUrl: `/api/assets/${id}`, title: prompt.slice(0, 54) },
         credits: balance,
+        safeFallbackApplied: result.safeFallbackApplied === true,
+        safePrompt: result.safePrompt,
       }, { status: 201 });
     }
 

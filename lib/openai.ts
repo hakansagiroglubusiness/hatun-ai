@@ -3,6 +3,12 @@ import { REFERENCE_IDENTITY_LOCK } from "./identity-lock";
 
 const API_ROOT = "https://api.openai.com/v1";
 export const IMAGE_MODEL = "gpt-image-2";
+export type ImageResult = {
+  bytes: Uint8Array;
+  contentType: string;
+  safeFallbackApplied?: boolean;
+  safePrompt?: string;
+};
 
 function key() {
   const value = process.env.OPENAI_API_KEY;
@@ -62,7 +68,7 @@ export async function enhancePrompt(prompt: string, mode: string) {
   return data.output_text || data.output?.flatMap((item: { content?: Array<{ text?: string }> }) => item.content || []).map((item: { text?: string }) => item.text).filter(Boolean).join("\n") || prompt;
 }
 
-export async function generateImage(prompt: string, size: string, quality: string) {
+async function generateImageOnce(prompt: string, size: string, quality: string): Promise<ImageResult> {
   await moderateText(prompt);
   const allowedSizes: Record<string, string> = {
     "1:1": "1024x1024",
@@ -84,6 +90,13 @@ export async function generateImage(prompt: string, size: string, quality: strin
   const b64 = data.data?.[0]?.b64_json;
   if (!b64) throw new ApiError(502, "Görsel çıktısı alınamadı.");
   return { bytes: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), contentType: "image/webp" };
+}
+
+export async function generateImage(prompt: string, size: string, quality: string): Promise<ImageResult> {
+  return generateWithSafeFallback(
+    prompt,
+    safePrompt => generateImageOnce(safePrompt, size, quality),
+  );
 }
 
 export async function createVideo(prompt: string, seconds: string, size: string, reference?: File) {
@@ -122,7 +135,7 @@ export async function describeImage(file: File) {
   return data.output_text || data.output?.flatMap(item => item.content || []).map(item => item.text).filter(Boolean).join("\n") || "Görsel açıklanamadı.";
 }
 
-export async function editImage(files: File[], prompt: string, size: string) {
+async function editImageOnce(files: File[], prompt: string, size: string): Promise<ImageResult> {
   await moderateText(prompt);
   const form = new FormData();
   form.set("model", IMAGE_MODEL);
@@ -137,6 +150,77 @@ export async function editImage(files: File[], prompt: string, size: string) {
   const b64 = data.data?.[0]?.b64_json;
   if (!b64) throw new ApiError(502, "Düzenlenmiş görsel alınamadı.");
   return { bytes: Uint8Array.from(atob(b64), c => c.charCodeAt(0)), contentType: "image/webp" };
+}
+
+export async function editImage(files: File[], prompt: string, size: string): Promise<ImageResult> {
+  return generateWithSafeFallback(
+    prompt,
+    safePrompt => editImageOnce(files, safePrompt, size),
+  );
+}
+
+async function generateWithSafeFallback(
+  prompt: string,
+  generate: (safePrompt: string) => Promise<ImageResult>,
+): Promise<ImageResult> {
+  try {
+    return await generate(prompt);
+  } catch (error) {
+    if (!isSafetyBlock(error)) throw error;
+  }
+
+  const minimallySoftened = await rewritePromptForSafety(prompt, false);
+  try {
+    const result = await generate(minimallySoftened);
+    return { ...result, safeFallbackApplied: true, safePrompt: minimallySoftened };
+  } catch (error) {
+    if (!isSafetyBlock(error)) throw error;
+  }
+
+  const conservative = await rewritePromptForSafety(prompt, true);
+  const result = await generate(conservative);
+  return { ...result, safeFallbackApplied: true, safePrompt: conservative };
+}
+
+async function rewritePromptForSafety(prompt: string, conservative: boolean) {
+  const data = await openAI("/responses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-5.1",
+      input: [
+        {
+          role: "system",
+          content: [
+            "Rewrite the image prompt into a clearly policy-compliant, non-explicit version.",
+            "Preserve the original scene, identity lock, camera, composition, lighting, mood, gaze, expression, pose direction, and overall creative goal wherever safe.",
+            "Change only details likely to trigger sexual or other safety filters.",
+            "Use opaque everyday clothing, non-explicit anatomy, natural non-suggestive posing, and an unmistakably adult subject.",
+            "Do not mention moderation, safety filters, refusals, or policy in the rewritten prompt.",
+            conservative
+              ? "Use a conservative lifestyle-photography interpretation: fully covered outfit, neutral framing, and no emphasis on intimate body areas."
+              : "Make the smallest safe changes possible while keeping the intended visual result recognizable.",
+            "Return only the rewritten production prompt.",
+          ].join(" "),
+        },
+        { role: "user", content: prompt },
+      ],
+    }),
+  }) as {
+    output_text?: string;
+    output?: Array<{ content?: Array<{ text?: string }> }>;
+  };
+  const rewritten = data.output_text
+    || data.output?.flatMap(item => item.content || []).map(item => item.text).filter(Boolean).join("\n");
+  if (!rewritten?.trim()) {
+    throw new ApiError(400, "İstek güvenli bir üretim promptuna dönüştürülemedi.");
+  }
+  return rewritten.trim();
+}
+
+function isSafetyBlock(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return /(safety|moderation|policy|sexual|blocked|rejected|güvenlik|üretilemez)/i.test(error.message);
 }
 
 export async function retrieveVideo(id: string) {
