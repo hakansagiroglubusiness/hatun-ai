@@ -257,3 +257,89 @@ body{background-image:radial-gradient(circle at 74% -10%,rgba(240,68,104,.15),tr
   .prompt-copy-icon{right:auto}
 }
 @media(max-width:520px){.prompt-grid{columns:1}}
+
+/* Alternative 1 — Pluggo-inspired graphite and electric-lime system */
+:root{
+  --bg:#0b0c0c;
+  --panel:#121313;
+  --panel2:#191a1a;
+  --line:#2b2d2c;
+  --muted:#929691;
+  --text:#f3f5ef;
+  --hot:#d9ff4f;
+  --orange:#f1ff9d;
+  --green:#d9ff4f;
+}
+html,body{background:#0b0c0c;color:#f3f5ef}
+body{background-image:radial-gradient(circle at 76% -8%,rgba(217,255,79,.07),transparent 30%)}
+::selection{background:#d9ff4f;color:#10110e}
+.app-shell{background:linear-gradient(180deg,rgba(255,255,255,.015),transparent 34%)}
+.sidebar{width:256px;padding:18px 16px;border-color:#292b2a;background:rgba(13,14,14,.94);box-shadow:none}
+.workspace{margin-left:256px;width:calc(100% - 256px)}
+.side-brand{padding:2px 6px 24px}.side-brand strong{font-size:22px;letter-spacing:-.045em}
+.hatun-logo{border-radius:8px;background:#d9ff4f;box-shadow:none;transform:none}
+.hatun-logo span{color:#11130d;transform:none}
+.create-btn{height:46px;border:0;border-radius:8px;background:#d9ff4f;color:#11130d;box-shadow:none}
+.create-btn:hover{background:#e4ff7d;box-shadow:none}
+.side-nav{gap:3px}.side-nav button{height:44px;border-radius:8px;color:#8c908b}
+.side-nav button:hover{background:#191a1a;color:#f3f5ef}
+.side-nav button.active{background:#20221d;color:#f3f5ef;box-shadow:inset 3px 0 #d9ff4f}
+.nav-label{margin-top:30px;color:#5f625e}
+.reward{border-color:#30332c;background:#171913}.reward strong{color:#d9ff4f}
+.profile>span,.avatar{background:#23251f;border-color:#383b32;color:#e8ff9a}
+.topbar{height:76px;padding:0 34px;border-color:#292b2a;background:rgba(11,12,12,.84)}
+.topbar h1{font-size:14px;color:#c8cbc5;text-transform:uppercase;letter-spacing:.1em}
+.search-pill,.credit-pill{height:38px;border-color:#303230;background:#151616;color:#989c96;border-radius:8px}
+.search-pill kbd{background:#232524}.credit-pill{color:#f3f5ef}.credit-pill span{color:#d9ff4f}
+.page{max-width:1520px;padding:40px 42px 80px}
+.welcome{min-height:350px;padding:55px 60px;border-color:#30332d;border-radius:18px;background:linear-gradient(115deg,#171817 0%,#121313 62%,#1a1d12 100%);box-shadow:none}
+.welcome:before{right:-180px;top:-210px;background:#bde531;filter:blur(120px);opacity:.18}
+.welcome-tag,.page-intro>span,.page-intro>div>span,.panel-title>div>span,.usage-card>span{color:#d9ff4f}
+.welcome h2{font-size:66px;line-height:.91;max-width:720px;letter-spacing:-.065em}
+.welcome p{max-width:560px;color:#979b95;font-size:15px}
+.orbit{border-color:#607129}.orbit.o1{box-shadow:0 0 55px rgba(217,255,79,.08)}
+.quick-grid{gap:14px;margin-top:16px}
+.quick-grid>button,.all-tools>button{border-color:#2c2e2d;background:#141515;border-radius:14px;box-shadow:none}
+.quick-grid>button:hover,.all-tools>button:hover{border-color:#667238;box-shadow:none}
+.tool-icon,.all-tools>button>span{border-radius:9px;background:#25291b;color:#d9ff4f}
+.quick-grid b,.all-tools b{color:#d9ff4f}
+.dashboard-grid{gap:16px;margin-top:16px}
+.panel,.usage-card,.config-panel,.results-panel{border-color:#2c2e2d;background:#121313;border-radius:16px;box-shadow:none}
+.panel{padding:28px}.usage-card{padding:28px}
+.creation,.result-card,.gallery-card{border-color:#2b2d2c;background:#181919}
+.creation em,.result-card em,.gallery-card em{color:#d9ff4f}
+.meter{background:#292b28}.meter i{background:#d9ff4f}
+.usage-card button,.extra-credit{border-color:#4a512c;background:#202418;color:#d9ff4f}
+.studio-tabs button.active{color:#fff;border-color:#d9ff4f}
+.field select,.inline-options select,.library-search{border-color:#303230;background:#171818;color:#f3f5ef;border-radius:8px}
+.upload{border-color:#3a3d38;background:#161717}.upload b{background:#25291b;color:#d9ff4f}
+.prompt-field textarea{border-color:#303230;background:#171818;color:#f3f5ef}
+.enhance{border-color:#4b522b;background:#202418;color:#d9ff4f}
+.estimate button{border-radius:8px;background:#d9ff4f;color:#11130d;box-shadow:none}
+.estimate button:hover:not(:disabled){background:#e4ff7d}
+.notice{color:#e8ff9c;background:#1d2115;border-color:#404829}
+.mini-filters button,.gallery-filters button{border-color:#303230;background:#171818}
+.mini-filters button.active,.gallery-filters button.active{color:#11130d;background:#d9ff4f;border-color:#d9ff4f}
+.page-intro{margin-top:28px}.page-intro h2{font-size:58px}
+.prompt-grid article,.pricing-grid article,.admin-metrics article,.admin-panel{border-color:#2c2e2d;background:#131414;box-shadow:none}
+.prompt-grid article>button,.prompt-actions button,.gallery-card a,.admin-head a,.admin-empty a{color:#d9ff4f}
+.gallery-card{background:#131414;box-shadow:none}
+.pricing-grid article.popular{border-color:#68743a;background:linear-gradient(150deg,#1d2114,#131414)}
+.pricing-grid article>em{color:#d9ff4f}
+.pricing-grid article>button{border-color:#4b522b;background:#202418;color:#d9ff4f}
+.pricing-grid article.popular>button{border-color:#d9ff4f;background:#d9ff4f;color:#11130d}
+.consent-check{border-color:#42482c;background:#1c2015;color:#b9beb5}
+.admin-head span{color:#d9ff4f}
+.prompt-modal-card{border-color:#303230;background:#121313;box-shadow:0 34px 110px rgba(0,0,0,.64)}
+.prompt-modal-content>span{color:#d9ff4f}
+.prompt-modal-content pre{color:#d3d6cf;background:#0d0e0e;border-color:#2c2e2d}
+.prompt-copy-icon,.modal-close{border-color:#3a3d39;background:#191a1a}
+.prompt-copy-icon:hover{background:#25291b;border-color:#667238;color:#d9ff4f}
+.prompt-modal-actions button{border-color:#d9ff4f;background:#d9ff4f;color:#11130d}
+@media(max-width:780px){
+  .workspace{margin-left:0;width:100%}
+  .topbar{padding:0 16px}
+  .page{padding:26px 15px 65px}
+  .welcome{padding:38px 26px}
+  .welcome h2{font-size:46px}
+}
